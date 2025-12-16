@@ -1,0 +1,5 @@
+top = /Users/andreamichelotti/progetti/IOC-DEVEL/psmodbusEEI
+SUPPORT=/epics/support
+EPICS_BASE=/epics/epics-base
+ASYN=/epics/support/asyn
+MODBUS=/epics/support/modbus

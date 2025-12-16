@@ -1,0 +1,930 @@
+# EEI Power Supply EPICS Modbus Template
+# Based on EEI Modbus map updated.csv
+# Holding registers start at 40001 (Modbus address 0x00)
+
+################### Command Word #1 (Register 40001 / 0x00) - Write ####################
+record(bo, "$(P):CMD_STANDBY")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Standby Command")
+    field(ZNAM, "Off")
+    field(ONAM, "Standby")
+}
+
+record(bo, "$(P):CMD_POWER_ON")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Power On Command")
+    field(ZNAM, "Off")
+    field(ONAM, "Power On")
+}
+
+record(bo, "$(P):CMD_GLOBAL_OFF")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Global Off Command")
+    field(ZNAM, "Off")
+    field(ONAM, "Global Off")
+}
+
+record(bo, "$(P):CMD_RESET")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x8 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Reset Command")
+    field(ZNAM, "Off")
+    field(ONAM, "Reset")
+}
+
+record(bo, "$(P):CMD_START_RAMP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x10 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Start Ramp/Trigger Command")
+    field(ZNAM, "Off")
+    field(ONAM, "Start Ramp")
+}
+
+record(bo, "$(P):CMD_CURRENT_MODE_TRIG")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x20 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Mode Triggered")
+    field(ZNAM, "Off")
+    field(ONAM, "Triggered")
+}
+
+record(bo, "$(P):CMD_CURRENT_MODE_SW")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Mode Software")
+    field(ZNAM, "Off")
+    field(ONAM, "Software")
+}
+
+record(bo, "$(P):CMD_DEVIATION_TOGGLE")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 0 0x100 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Deviation Toggle")
+    field(ZNAM, "Off")
+    field(ONAM, "Toggle")
+}
+
+# Raw access to Command Word #1
+record(ao, "$(P):CMD_WORD_RAW")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 0 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Command Word 1 Raw")
+}
+
+
+################### Command Word #2 (Register 40002 / 0x01) - Write ####################
+# Contactors control - can be used directly
+record(bo, "$(P):CMD_CONTACTORS_OPEN")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 1 0x4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Open Contactors")
+    field(ZNAM, "Off")
+    field(ONAM, "Open")
+}
+
+# Polarity control with interlock - always opens contactors first
+record(bo, "$(P):CMD_POLARITY_POS_REQ")
+{
+    field(DESC, "Request Polarity Positive")
+    field(ZNAM, "Off")
+    field(ONAM, "Positive")
+    field(FLNK, "$(P):POLARITY_SEQ_POS")
+}
+
+record(seq, "$(P):POLARITY_SEQ_POS")
+{
+    field(DESC, "Positive Polarity Sequence")
+    field(SELM, "All")
+    field(DOL1, "1")
+    field(LNK1, "$(P):CMD_CONTACTORS_OPEN PP")
+    field(DLY1, "0")
+    field(DOL2, "1")
+    field(LNK2, "$(P):CMD_POLARITY_POS_EXEC PP")
+    field(DLY2, "1.0")
+}
+
+record(bo, "$(P):CMD_POLARITY_NEG_REQ")
+{
+    field(DESC, "Request Polarity Negative")
+    field(ZNAM, "Off")
+    field(ONAM, "Negative")
+    field(FLNK, "$(P):POLARITY_SEQ_NEG")
+}
+
+record(seq, "$(P):POLARITY_SEQ_NEG")
+{
+    field(DESC, "Negative Polarity Sequence")
+    field(SELM, "All")
+    field(DOL1, "1")
+    field(LNK1, "$(P):CMD_CONTACTORS_OPEN PP")
+    field(DLY1, "0")
+    field(DOL2, "2")
+    field(LNK2, "$(P):CMD_POLARITY_NEG_EXEC PP")
+    field(DLY2, "1.0")
+}
+
+# Direct polarity commands (used by sequencer)
+record(ao, "$(P):CMD_POLARITY_POS_EXEC")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Set Polarity Positive")
+}
+
+record(ao, "$(P):CMD_POLARITY_NEG_EXEC")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Set Polarity Negative")
+  
+}
+
+# Raw access to Command Word #2
+record(ao, "$(P):POLARITY_CTRL")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Polarity Control")
+}   
+
+
+################### Current Reference (Register 40003 / 0x02) - Write ####################
+record(ao, "$(P):CURR_SET")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Setpoint")
+    field(EGU,  "A")
+    field(PREC, "3")
+    field(ASLO, "0.001")
+    field(DRVH, "$(MAX_CURR=330)")
+    field(DRVL, "0")
+    field(HOPR, "$(MAX_CURR=330)")
+    field(LOPR, "0")
+}
+
+################### Current Sign (Register 40004 / 0x03) - Write ####################
+record(mbbo, "$(P):CURR_SET_SIGN")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 3 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Setpoint Sign")
+    field(ZRST, "Positive")
+    field(ONST, "Negative")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+}
+
+################### Ramp Rate (Register 40005 / 0x04) - Write ####################
+record(ao, "$(P):RAMP_RATE_SET")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Ramp Rate Setpoint")
+    field(EGU,  "A/s")
+    field(PREC, "0")
+    field(DRVH, "3474")
+    field(DRVL, "10")
+    field(HOPR, "3474")
+    field(LOPR, "10")
+}
+
+################### Cycle Pattern (Registers 40006-40007 / 0x05-0x06) - Write ####################
+record(ao, "$(P):CYCLE_PATTERN_1")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 5 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Cycles at Set")
+    field(PREC, "0")
+}
+
+record(ao, "$(P):CYCLE_PATTERN_0")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 6 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Cycles at Zero")
+    field(PREC, "0")
+}
+
+################### Status Word #1 (Register 40022 / 0x15) - Read ####################
+record(bi, "$(P):STAT_STANDBY")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Standby State")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Not Standby")
+    field(ONAM, "Standby")
+}
+
+record(bi, "$(P):STAT_POWER_ON")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Power On State")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Off")
+    field(ONAM, "Power On")
+}
+
+record(bi, "$(P):STAT_FAULTY")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Faulty State")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):STAT_REMOTE")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x8 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Remote State")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Local")
+    field(ONAM, "Remote")
+}
+
+record(bi, "$(P):STAT_LOCAL")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x10 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Local State")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Remote")
+    field(ONAM, "Local")
+}
+
+record(bi, "$(P):STAT_CURR_MODE_TRIG")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x20 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Mode Triggered")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Software")
+    field(ONAM, "Triggered")
+}
+
+record(bi, "$(P):STAT_CURR_MODE_SW")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 21 0x40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Mode Software")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Triggered")
+    field(ONAM, "Software")
+}
+
+# Raw access to Status Word #1
+record(ai, "$(P):STAT_WORD1_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 21 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Status Word 1 Raw")
+    field(SCAN, "I/O Intr")
+}
+
+################### Status Word #2 (Register 40023 / 0x16) - Read ####################
+record(bi, "$(P):STAT_POLARITY_POS")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 22 0x1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Polarity Positive")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Not Positive")
+    field(ONAM, "Positive")
+}
+
+record(bi, "$(P):STAT_POLARITY_NEG")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 22 0x2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Polarity Negative")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Not Negative")
+    field(ONAM, "Negative")
+}
+
+record(bi, "$(P):STAT_CONTACTORS_OPEN")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 22 0x4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Contactors Open")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Closed")
+    field(ONAM, "Open")
+}
+
+# Raw access to Status Word #2
+record(ai, "$(P):STAT_WORD2_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 22 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Status Word 2 Raw")
+    field(SCAN, "I/O Intr")
+}
+
+################### Ramp Rate Active (Register 40024 / 0x17) - Read ####################
+record(ai, "$(P):RAMP_RATE_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 23 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Ramp Rate Readback")
+    field(EGU,  "A/s")
+    field(PREC, "0")
+    field(SCAN, "I/O Intr")
+    field(HOPR, "3474")
+    field(LOPR, "10")
+}
+
+################### Real Current (Register 40025 / 0x18) - Read ####################
+record(ai, "$(P):CURR_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 24 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Readback (Absolute)")
+    field(EGU,  "A")
+    field(PREC, "3")
+    field(ASLO, "0.001")
+    field(SCAN, "I/O Intr")
+}
+
+################### Real Current (Register 40025 / 0x18) - Read ####################
+record(ai, "$(P):CURR_SCALE_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 9 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Readback (Absolute)")
+    field(EGU,  "A")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):VOLT_SCALE_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 8 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Readback (Absolute)")
+    field(EGU,  "A")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+}
+
+################### Current Sign Readback (Register 40026 / 0x19) - Read ####################
+record(mbbi, "$(P):CURR_RB_SIGN")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 25 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Readback Sign")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Positive")
+    field(ONST, "Negative")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+}
+
+################### Real Voltage (Register 40027 / 0x1A) - Read ####################
+record(ai, "$(P):VOLT_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 26 $(TIMEOUT=1000))INT16")
+    field(DESC, "Voltage Readback")
+    field(EGU,  "V")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+    field(HOPR, "135")
+    field(LOPR, "-135")
+}
+
+################### Most Significant Faults Word #1 (Register 40028 / 0x1B) - Read ####################
+record(bi, "$(P):FAULT_PLC_DCDC")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-DCDC Converter Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_DCCT_PS")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-DCCT Power Supply Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_MAG_ILK1")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-Magnet Interlock #1")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_MAG_ILK2")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x8 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-Magnet Interlock #2")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_ACDC1")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x10 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-AC/DC Converter 1 Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_ACDC2")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x20 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-AC/DC Converter 2 Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_WATER_FLOW")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-Water Flow Switch Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_24V_PS")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x80 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-24V Power Supply Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_FUSES")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x100 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-Fuses Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_DC_LINK_DISCH")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x200 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-DC Link Discharger Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_CONTACTOR")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x800 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-Contactor Not Congruent")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_CANBUS_DCDC")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x1000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-CANbus DC/DC Comm Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_CANBUS_EXP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x2000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-CANbus EXP Comm Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_CANBUS_ACDC1")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x4000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-CANbus AC/DC1 Comm Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_PLC_CANBUS_ACDC2")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 27 0x8000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC-CANbus AC/DC2 Comm Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+# Raw access to Faults Word #1
+record(ai, "$(P):FAULT_WORD1_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 27 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Faults Word 1 Raw")
+    field(SCAN, "I/O Intr")
+}
+
+################### Most Significant Faults Word #2 (Register 40029 / 0x1C) - Read ####################
+record(bi, "$(P):FAULT_DCDC_OVERCURR")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Overcurrent Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_DCDC_THERM_PROT")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Thermal Protection")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_DCDC_OVERTEMP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Heat Sink Overtemp")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_DCDC_DCLINK_LOW")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x8 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC DC Link Voltage Low")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_DCDC_DCLINK_HIGH")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x10 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC DC Link Voltage High")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_DCDC_GROUND_CURR")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x20 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Ground Current Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC1_OVERCURR")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Overcurrent Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC1_THERM_PROT")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x80 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Thermal Protection")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC1_WATER_TEMP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x100 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Water Overtemp")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC1_AIR_TEMP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x200 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Air Overtemp")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC2_OVERCURR")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x800 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Overcurrent Fault")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC2_THERM_PROT")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x1000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Thermal Protection")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC2_WATER_TEMP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x2000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Water Overtemp")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+record(bi, "$(P):FAULT_ACDC2_AIR_TEMP")
+{
+    field(DTYP, "asynUInt32Digital")
+    field(INP,  "@asynMask($(PORT) 28 0x4000 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Air Overtemp")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "OK")
+    field(ONAM, "FAULT")
+    field(ZSV,  "NO_ALARM")
+    field(OSV,  "MAJOR")
+}
+
+# Raw access to Faults Word #2
+record(ai, "$(P):FAULT_WORD2_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 28 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Faults Word 2 Raw")
+    field(SCAN, "I/O Intr")
+}
+
+################### Detailed Fault Words (Registers 40033-40040 / 0x20-0x27) - Read ####################
+record(ai, "$(P):PLC_FAULT_WORD1_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 32 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC Faults Word 1")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):PLC_FAULT_WORD2_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 33 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "PLC Faults Word 2")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DCDC_FAULT_WORD1_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 34 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Faults Word 1")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DCDC_FAULT_WORD2_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 35 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Faults Word 2")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):ACDC1_FAULT_WORD1_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 36 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Faults Word 1")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):ACDC1_FAULT_WORD2_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 37 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Faults Word 2")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):ACDC2_FAULT_WORD1_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 38 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Faults Word 1")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):ACDC2_FAULT_WORD2_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 39 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Faults Word 2")
+    field(SCAN, "I/O Intr")
+}
+
+################### Temperatures and Voltages (Registers 40041-40045 / 0x28-0x2C) - Read ####################
+record(ai, "$(P):DCDC_HEATSINK_TEMP_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "DC/DC Heat Sink Temperature")
+    field(EGU,  "°C")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+    field(ASLO, "0.1")
+}
+
+record(ai, "$(P):ACDC1_VOLT_OUT_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 41 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Output Voltage")
+    field(EGU,  "V")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+    field(ASLO, "0.1")
+}
+
+record(ai, "$(P):ACDC1_CURR_OUT_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP     ,  "@asyn($(PORT) 42 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC1 Output Current")
+    field(EGU,  "A")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+    field(ASLO, "0.1")
+}
+
+record(ai, "$(P):ACDC2_VOLT_OUT_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 43 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Output Voltage")
+    field(EGU,  "V")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+    field(ASLO, "0.1")
+}
+
+record(ai, "$(P):ACDC2_CURR_OUT_RB")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 44 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "AC/DC2 Output Current")
+    field(EGU,  "A")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+    field(ASLO, "0.1")
+}
+
+################### UNIMAG interface ####################
+# Current Readback PV (CURRENT_RB)
+# Displays the current readback value for the magnet channel.
+# PV format: $(P):$(R):CURRENT_RB
+
+# Current Setpoint PV (CURRENT_SP)
+# Allows the user to set the desired current for the magnet channel.
+# PV format: $(P):$(R):CURRENT_SP
+
+# Status PV (STATE_RB)
+# Shows the current status or state of the magnet channel.
+# PV format: $(P):$(R):STATE_RB
+
+# Set Status PV (STATE_SP)
+# Enables the user to change the status or mode of the channel (e.g., via ON, STBY, RESET buttons).
+# PV format: $(P):$(R):STATE_SP
+
+# Possible Values for STATE_RB and STATE_SP
+# The status PVs represent the operational state of the magnet channel. Possible values include:
+
+# OFF – Magnet is powered off or inactive
+# ON – Magnet is active and powered
+# STANDBY – Magnet is in standby mode
+# FAULT – Magnet has detected a fault condition
+# RESET – Magnet is being reset
+# Additional states may be supported depending o

@@ -1,0 +1,295 @@
+# EEI Power Supply UNIMAG Interface
+# Provides simplified current control with automatic polarity and sequencing
+# Requires eei_ps.template to be loaded
+
+################### UNIMAG Current Setpoint ####################
+# User sets current in A (positive or negative)
+# PV format: $(P):CURRENT_SP
+record(ao, "$(P):CURRENT_SP")
+{
+    field(DESC, "Current Setpoint (signed)")
+    field(EGU,  "A")
+    field(PREC, "3")
+    field(DRVH, "$(MAX_CURR=330)")
+    field(DRVL, "$(MIN_CURR=-330)")
+    field(HOPR, "$(MAX_CURR=330)")
+    field(LOPR, "$(MIN_CURR=-330)")
+    field(FLNK, "$(P):UNIMAG_PROCESS")
+}
+
+# Process the current change request
+record(calcout, "$(P):UNIMAG_PROCESS")
+{
+    field(DESC, "Determine Polarity from Current")
+    field(INPA, "$(P):CURRENT_SP")
+    field(INPB, "$(P):STAT_POLARITY_POS CP")
+    field(INPC, "$(P):STAT_POLARITY_NEG CP")
+    field(CALC, "A>=0?1:2")
+    field(OUT,  "$(P):UNIMAG_REQ_POL PP")
+    field(FLNK, "$(P):UNIMAG_ABS_CURR")
+}
+
+# Calculate absolute current value
+record(calcout, "$(P):UNIMAG_ABS_CURR")
+{
+    field(DESC, "Calculate Absolute Current")
+    field(INPA, "$(P):CURRENT_SP")
+    field(CALC, "ABS(A)")
+    field(OUT,  "$(P):UNIMAG_CURR_VAL PP")
+}
+
+# Store requested polarity (1=positive, 2=negative)
+record(longout, "$(P):UNIMAG_REQ_POL")
+{
+    field(DESC, "Requested Polarity")
+    field(FLNK, "$(P):UNIMAG_CHECK_POL")
+}
+
+# Store absolute current value
+record(ao, "$(P):UNIMAG_CURR_VAL")
+{
+    field(DESC, "Absolute Current Value")
+    field(EGU,  "A")
+    field(PREC, "3")
+}
+
+# Check if polarity change is needed
+record(calcout, "$(P):UNIMAG_CHECK_POL")
+{
+    field(DESC, "Check Polarity Change Needed")
+    field(INPA, "$(P):UNIMAG_REQ_POL")
+    field(INPB, "$(P):STAT_POLARITY_POS")
+    field(INPC, "$(P):STAT_POLARITY_NEG")
+    field(CALC, "(A=1&&!B)||(A=2&&!C)")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_SEQ.PROC PP")
+    field(FLNK, "$(P):UNIMAG_SET_CURR")
+}
+
+# If no polarity change needed, just set current
+record(calcout, "$(P):UNIMAG_SET_CURR")
+{
+    field(DESC, "Set Current if No Polarity Change")
+    field(INPA, "$(P):UNIMAG_REQ_POL")
+    field(INPB, "$(P):STAT_POLARITY_POS")
+    field(INPC, "$(P):STAT_POLARITY_NEG")
+    field(CALC, "(A=1&&B)||(A=2&&C)")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_SEQ.SELN PP")
+    field(OCAL, "9")
+}
+
+# Main sequencer
+record(seq, "$(P):UNIMAG_SEQ")
+{
+    field(DESC, "UNIMAG Power-up Sequence")
+    field(SELM, "Specified")
+    field(SELN, "1")
+    
+    # Step 1: Go to Standby (for polarity change)
+    field(DOL1, "1")
+    field(LNK1, "$(P):CMD_STANDBY PP")
+    field(DLY1, "0")
+    
+    # Step 2: Wait for standby
+    field(DOL2, "1")
+    field(LNK2, "$(P):UNIMAG_WAIT_STBY PP")
+    field(DLY2, "1.0")
+    
+    # Step 3: Open contactors
+    field(DOL3, "1")
+    field(LNK3, "$(P):CMD_CONTACTORS_OPEN PP")
+    field(DLY3, "0.5")
+    
+    # Step 4: Set polarity positive
+    field(DOL4, "1")
+    field(LNK4, "$(P):UNIMAG_SET_POL_POS PP")
+    field(DLY4, "1.0")
+    
+    # Step 5: Set polarity negative
+    field(DOL5, "2")
+    field(LNK5, "$(P):UNIMAG_SET_POL_NEG PP")
+    field(DLY5, "1.0")
+    
+    # Step 6: Power On
+    field(DOL6, "1")
+    field(LNK6, "$(P):CMD_POWER_ON PP")
+    field(DLY6, "0.5")
+    
+    # Step 7: Wait for power on
+    field(DOL7, "1")
+    field(LNK7, "$(P):UNIMAG_WAIT_PWR PP")
+    field(DLY7, "1.0")
+    
+    # Step 8: Set current value
+    field(DOL8, "1")
+    field(LNK8, "$(P):UNIMAG_WRITE_CURR PP")
+    field(DLY8, "0.5")
+    
+    # Step 9: Start ramp (direct current set, no polarity change)
+    field(DOL9, "1")
+    field(LNK9, "$(P):UNIMAG_DIRECT_SET PP")
+    field(DLY9, "0")
+    
+    # Step 10: Start ramp
+    field(DOLA, "1")
+    field(LNKA, "$(P):CMD_START_RAMP PP")
+    field(DLYA, "0.2")
+}
+
+# Wait for standby state
+record(calcout, "$(P):UNIMAG_WAIT_STBY")
+{
+    field(DESC, "Check Standby State")
+    field(INPA, "$(P):STAT_STANDBY")
+    field(CALC, "A")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_SEQ.SELN PP")
+    field(OCAL, "3")
+    field(ODLY, "0.5")
+}
+
+# Wait for power on state
+record(calcout, "$(P):UNIMAG_WAIT_PWR")
+{
+    field(DESC, "Check Power On State")
+    field(INPA, "$(P):STAT_POWER_ON")
+    field(CALC, "A")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_SEQ.SELN PP")
+    field(OCAL, "8")
+    field(ODLY, "0.5")
+}
+
+# Set polarity positive
+record(calcout, "$(P):UNIMAG_SET_POL_POS")
+{
+    field(DESC, "Set Polarity Positive")
+    field(INPA, "$(P):UNIMAG_REQ_POL")
+    field(CALC, "A=1")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):CMD_POLARITY_POS_EXEC PP")
+    field(FLNK, "$(P):UNIMAG_CONT_SEQ")
+}
+
+# Set polarity negative
+record(calcout, "$(P):UNIMAG_SET_POL_NEG")
+{
+    field(DESC, "Set Polarity Negative")
+    field(INPA, "$(P):UNIMAG_REQ_POL")
+    field(CALC, "A=2")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):CMD_POLARITY_NEG_EXEC PP")
+    field(FLNK, "$(P):UNIMAG_CONT_SEQ")
+}
+
+# Continue sequence after polarity set
+record(calcout, "$(P):UNIMAG_CONT_SEQ")
+{
+    field(DESC, "Continue to Power On")
+    field(CALC, "1")
+    field(OUT,  "$(P):UNIMAG_SEQ.SELN PP")
+    field(OCAL, "6")
+    field(ODLY, "1.0")
+}
+
+# Write current value
+record(dfanout, "$(P):UNIMAG_WRITE_CURR")
+{
+    field(DESC, "Write Current Setpoint")
+    field(DOL,  "$(P):UNIMAG_CURR_VAL")
+    field(OMSL, "closed_loop")
+    field(OUTA, "$(P):CURR_SET PP")
+    field(FLNK, "$(P):UNIMAG_SEQ.SELN PP")
+}
+
+# Direct set (when no polarity change needed) - write current and start ramp
+record(seq, "$(P):UNIMAG_DIRECT_SET")
+{
+    field(DESC, "Direct Current Set")
+    field(SELM, "All")
+    field(DOL1, "$(P):UNIMAG_CURR_VAL")
+    field(LNK1, "$(P):CURR_SET PP")
+    field(DLY1, "0")
+    field(DOL2, "1")
+    field(LNK2, "$(P):CMD_START_RAMP PP")
+    field(DLY2, "0.5")
+}
+
+################### Status Readback ####################
+# Current readback (signed based on polarity)
+# PV format: $(P):CURRENT_RB
+record(calcout, "$(P):CURRENT_RB")
+{
+    field(DESC, "Current Readback (signed)")
+    field(INPA, "$(P):CURR_RB CP")
+    field(INPB, "$(P):STAT_POLARITY_NEG CP")
+    field(CALC, "B?-A:A")
+    field(EGU,  "A")
+    field(PREC, "3")
+}
+
+# Overall status readback
+# PV format: $(P):STATE_RB
+# Values: 0=OFF, 1=STANDBY, 2=ON, 3=FAULT, 4=RESET
+record(mbbi, "$(P):STATE_RB")
+{
+    field(DESC, "Power Supply State")
+    field(INP,  "$(P):STAT_WORD1_RB CP")
+    field(ZRST, "OFF")
+    field(ONST, "STANDBY")
+    field(TWST, "ON")
+    field(THST, "FAULT")
+    field(FRST, "RESET")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "4")
+    field(FRVL, "8")
+    field(ZRSV, "NO_ALARM")
+    field(ONSV, "MINOR")
+    field(TWSV, "NO_ALARM")
+    field(THSV, "MAJOR")
+    field(FRSV, "MINOR")
+}
+
+# State control setpoint
+# PV format: $(P):STATE_SP
+# Allows user to command state changes: STANDBY, ON, RESET, OFF
+record(mbbo, "$(P):STATE_SP")
+{
+    field(DESC, "Set Power Supply State")
+    field(ZRST, "OFF")
+    field(ONST, "STANDBY")
+    field(TWST, "ON")
+    field(THST, "RESET")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(FLNK, "$(P):STATE_PROCESS")
+}
+
+# Process state change requests
+record(seq, "$(P):STATE_PROCESS")
+{
+    field(DESC, "Process State Command")
+    field(SELM, "Specified")
+    field(SELN, "$(P):STATE_SP")
+    field(DOL1, "1")
+    field(LNK1, "$(P):CMD_GLOBAL_OFF PP")
+    field(DOL2, "1")
+    field(LNK2, "$(P):CMD_STANDBY PP")
+    field(DOL3, "1")
+    field(LNK3, "$(P):CMD_POWER_ON PP")
+    field(DOL4, "1")
+    field(LNK4, "$(P):CMD_RESET PP")
+}
+
+# Interlock status
+record(calc, "$(P):INTERLOCKED")
+{
+    field(DESC, "Interlock Active")
+    field(INPA, "$(P):STAT_FAULTY CP")
+    field(CALC, "A")
+}
