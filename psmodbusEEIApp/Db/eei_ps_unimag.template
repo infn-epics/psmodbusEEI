@@ -275,7 +275,7 @@ record(seq, "$(P):STATE_PROCESS")
 {
     field(DESC, "Process State Command")
     field(SELM, "Specified")
-    field(SELN, "$(P):STATE_SP")
+    field(SELL, "$(P):STATE_SP NPP MS")
     field(DOL1, "1")
     field(LNK1, "$(P):CMD_GLOBAL_OFF PP")
     field(DOL2, "1")
