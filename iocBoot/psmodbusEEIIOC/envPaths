@@ -1,5 +1,5 @@
-top = /Users/andreamichelotti/progetti/IOC-DEVEL/psmodbusEEI
-SUPPORT=/epics/support
-EPICS_BASE=/epics/epics-base
-ASYN=/epics/support/asyn
-MODBUS=/epics/support/modbus
+epicsEnvSet("IOC","psmodbusEEIIOC")
+epicsEnvSet("TOP","/app/IOC-DEVEL/psmodbusEEI")
+epicsEnvSet("EPICS_BASE","/epics/epics-base")
+epicsEnvSet("ASYN","/epics/support/asyn")
+epicsEnvSet("MODBUS","/epics/support/modbus")

@@ -351,7 +351,7 @@ record(ai, "$(P):RAMP_RATE_RB")
     field(PREC, "0")
     field(SCAN, "I/O Intr")
     field(HOPR, "3474")
-    field(LOPR, "10")
+    field(ASLO, "0.1")
 }
 
 ################### Real Current (Register 40025 / 0x18) - Read ####################
@@ -850,7 +850,7 @@ record(ai, "$(P):ACDC2_FAULT_WORD2_RB")
 record(ai, "$(P):DCDC_HEATSINK_TEMP_RB")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT) 40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(INP,  "@asyn($(PORT) 35 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "DC/DC Heat Sink Temperature")
     field(EGU,  "°C")
     field(PREC, "1")
@@ -861,7 +861,7 @@ record(ai, "$(P):DCDC_HEATSINK_TEMP_RB")
 record(ai, "$(P):ACDC1_VOLT_OUT_RB")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT) 41 $(TIMEOUT=1000))MODBUS_DATA")
+    field(INP,  "@asyn($(PORT) 36 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "AC/DC1 Output Voltage")
     field(EGU,  "V")
     field(PREC, "1")
@@ -874,7 +874,7 @@ record(ai, "$(P):ACDC1_CURR_OUT_RB")
     field(DTYP, "asynInt32")
     field(INP     ,  "@asyn($(PORT) 42 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "AC/DC1 Output Current")
-    field(EGU,  "A")
+    field(EGU,  "mA")
     field(PREC, "1")
     field(SCAN, "I/O Intr")
     field(ASLO, "0.1")
@@ -900,4 +900,366 @@ record(ai, "$(P):ACDC2_CURR_OUT_RB")
     field(PREC, "1")
     field(SCAN, "I/O Intr")
     field(ASLO, "0.1")
+}
+
+################### DEBUG: All Holding Registers (0-44) ####################
+# Complete register map for debugging - shows raw values
+record(ai, "$(P):DEBUG_REG00")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 0 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 0 (CMD Word 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG01")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 1 (CMD Word 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG02")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 2 (Current Ref)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG03")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 3 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 3 (Current Sign)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG04")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 4 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 4 (Ramp Rate)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG05")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 5 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 5 (Cycle Pat 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG06")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 6 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 6 (Cycle Pat 0)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG07")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 7 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 7")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG08")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 8 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 8 (Volt Scale)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG09")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 9 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 9 (Curr Scale)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG10")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 10 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 10")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG11")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 11 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 11")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG12")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 12 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 12")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG13")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 13 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 13")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG14")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 14 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 14")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG15")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 15 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 15")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG16")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 16 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 16")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG17")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 17 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 17")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG18")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 18 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 18")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG19")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 19 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 19")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG20")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 20 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 20")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG21")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 21 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 21 (Status 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG22")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 22 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 22 (Status 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG23")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 23 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 23 (Ramp Rate)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG24")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 24 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 24 (Current)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG25")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 25 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 25 (Curr Sign)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG26")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 26 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 26 (Voltage)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG27")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 27 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 27 (Fault 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG28")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 28 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 28 (Fault 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG29")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 29 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 29")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG30")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 30 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 30")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG31")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 31 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 31")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG32")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 32 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 32 (PLC Flt 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG33")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 33 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 33 (PLC Flt 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG34")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 34 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 34 (DCDC Flt 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG35")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 35 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 35 (DCDC Flt 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG36")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 36 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 36 (ACDC1 Flt 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG37")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 37 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 37 (ACDC1 Flt 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG38")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 38 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 38 (ACDC2 Flt 1)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG39")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 39 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 39 (ACDC2 Flt 2)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG40")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 40 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 40 (DCDC Temp)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG41")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 41 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 41 (ACDC1 Volt)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG42")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 42 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 42 (ACDC1 Curr)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG43")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 43 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 43 (ACDC2 Volt)")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P):DEBUG_REG44")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 44 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Register 44 (ACDC2 Curr)")
+    field(SCAN, "I/O Intr")
 }

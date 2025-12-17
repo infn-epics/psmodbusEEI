@@ -60,23 +60,55 @@ record(calcout, "$(P):UNIMAG_CHECK_POL")
     field(INPA, "$(P):UNIMAG_REQ_POL")
     field(INPB, "$(P):STAT_POLARITY_POS")
     field(INPC, "$(P):STAT_POLARITY_NEG")
-    field(CALC, "(A=1&&!B)||(A=2&&!C)")
-    field(OOPT, "When Non-zero")
-    field(OUT,  "$(P):UNIMAG_SEQ.PROC PP")
-    field(FLNK, "$(P):UNIMAG_SET_CURR")
+    field(INPD, "$(P):STAT_POWER_ON")
+    # Result: 0=no pol change, 1=pol change & not powered, 2=pol change & powered
+    field(CALC, "D?((A=1&&!B)||(A=2&&!C)?2:0):((A=1&&!B)||(A=2&&!C)?1:0)")
+    field(FLNK, "$(P):UNIMAG_ROUTE")
 }
 
-# If no polarity change needed, just set current
-record(calcout, "$(P):UNIMAG_SET_CURR")
+# Route to appropriate sequence based on state
+record(calcout, "$(P):UNIMAG_ROUTE")
 {
-    field(DESC, "Set Current if No Polarity Change")
-    field(INPA, "$(P):UNIMAG_REQ_POL")
-    field(INPB, "$(P):STAT_POLARITY_POS")
-    field(INPC, "$(P):STAT_POLARITY_NEG")
-    field(CALC, "(A=1&&B)||(A=2&&C)")
+    field(DESC, "Route Current Change Request")
+    field(INPA, "$(P):UNIMAG_CHECK_POL")
+    field(CALC, "A")
+    # If A=0: no pol change, direct set
+    # If A=1: pol change, not powered, use full sequence
+    # If A=2: pol change, powered, ramp to zero first
+    field(OOPT, "Every Time")
+    field(FLNK, "$(P):UNIMAG_ROUTE_0")
+}
+
+# Route 0: No polarity change - direct set current and ramp
+record(calcout, "$(P):UNIMAG_ROUTE_0")
+{
+    field(DESC, "Direct Set (No Pol Change)")
+    field(INPA, "$(P):UNIMAG_ROUTE")
+    field(CALC, "A=0")
     field(OOPT, "When Non-zero")
-    field(OUT,  "$(P):UNIMAG_SEQ.SELN PP")
-    field(OCAL, "9")
+    field(OUT,  "$(P):UNIMAG_DIRECT_SET.PROC PP")
+    field(FLNK, "$(P):UNIMAG_ROUTE_1")
+}
+
+# Route 1: Polarity change, not powered - full sequence from start
+record(calcout, "$(P):UNIMAG_ROUTE_1")
+{
+    field(DESC, "Full Sequence (Pol Change)")
+    field(INPA, "$(P):UNIMAG_ROUTE")
+    field(CALC, "A=1")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_SEQ.PROC PP")
+    field(FLNK, "$(P):UNIMAG_ROUTE_2")
+}
+
+# Route 2: Polarity change, powered - ramp to zero first
+record(calcout, "$(P):UNIMAG_ROUTE_2")
+{
+    field(DESC, "Ramp to Zero (Pol Change)")
+    field(INPA, "$(P):UNIMAG_ROUTE")
+    field(CALC, "A=2")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_ZERO_SEQ.PROC PP")
 }
 
 # Main sequencer
@@ -216,6 +248,61 @@ record(seq, "$(P):UNIMAG_DIRECT_SET")
     field(DLY2, "0.5")
 }
 
+# Sequence for ramping to zero before polarity change (when already powered)
+record(seq, "$(P):UNIMAG_ZERO_SEQ")
+{
+    field(DESC, "Ramp to Zero Before Pol Change")
+    field(SELM, "All")
+    
+    # Step 1: Set current to 0
+    field(DOL1, "0")
+    field(LNK1, "$(P):CURR_SET PP")
+    field(DLY1, "0")
+    
+    # Step 2: Start ramp to zero
+    field(DOL2, "1")
+    field(LNK2, "$(P):CMD_START_RAMP PP")
+    field(DLY2, "0.5")
+    
+    # Step 3: Wait for current to reach zero (monitor for ~3s)
+    field(DOL3, "1")
+    field(LNK3, "$(P):UNIMAG_WAIT_ZERO PP")
+    field(DLY3, "3.0")
+    
+    # Step 4: Go to standby
+    field(DOL4, "1")
+    field(LNK4, "$(P):CMD_STANDBY PP")
+    field(DLY4, "1.0")
+    
+    # Step 5: Wait for standby, then continue with polarity change
+    field(DOL5, "1")
+    field(LNK5, "$(P):UNIMAG_WAIT_STBY_POL PP")
+    field(DLY5, "1.0")
+}
+
+# Wait for current to reach near zero
+record(calcout, "$(P):UNIMAG_WAIT_ZERO")
+{
+    field(DESC, "Wait for Zero Current")
+    field(INPA, "$(P):CURR_RB")
+    field(CALC, "ABS(A)<5")
+    field(OOPT, "When Zero")
+    field(OUT,  "$(P):UNIMAG_WAIT_ZERO.PROC PP")
+    field(ODLY, "0.5")
+}
+
+# After standby from powered state, continue with polarity sequence
+record(calcout, "$(P):UNIMAG_WAIT_STBY_POL")
+{
+    field(DESC, "Wait Standby for Pol Change")
+    field(INPA, "$(P):STAT_STANDBY")
+    field(CALC, "A")
+    field(OOPT, "When Non-zero")
+    field(OUT,  "$(P):UNIMAG_SEQ.SELN PP")
+    field(OCAL, "3")
+    field(ODLY, "0.5")
+}
+
 ################### Status Readback ####################
 # Current readback (signed based on polarity)
 # PV format: $(P):CURRENT_RB
@@ -229,28 +316,33 @@ record(calcout, "$(P):CURRENT_RB")
     field(PREC, "3")
 }
 
-# Overall status readback
+# Overall status readback - decode state from individual bits
 # PV format: $(P):STATE_RB
-# Values: 0=OFF, 1=STANDBY, 2=ON, 3=FAULT, 4=RESET
+# Values: 1=STANDBY (includes OFF), 2=ON, 3=FAULT
+# Priority: FAULT > ON > STANDBY
+record(calcout, "$(P):STATE_DECODE")
+{
+    field(DESC, "Decode Power Supply State")
+    field(INPA, "$(P):STAT_STANDBY CP")
+    field(INPB, "$(P):STAT_POWER_ON CP")
+    field(INPC, "$(P):STAT_FAULTY CP")
+    field(CALC, "C?3:(B?2:1)")
+    field(OUT,  "$(P):STATE_RB PP")
+}
+
 record(mbbi, "$(P):STATE_RB")
 {
     field(DESC, "Power Supply State")
-    field(INP,  "$(P):STAT_WORD1_RB CP")
-    field(ZRST, "OFF")
+    field(INP,  "$(P):STATE_DECODE NPP MS")
     field(ONST, "STANDBY")
     field(TWST, "ON")
     field(THST, "FAULT")
-    field(FRST, "RESET")
-    field(ZRVL, "0")
     field(ONVL, "1")
     field(TWVL, "2")
-    field(THVL, "4")
-    field(FRVL, "8")
-    field(ZRSV, "NO_ALARM")
-    field(ONSV, "MINOR")
+    field(THVL, "3")
+    field(ONSV, "NO_ALARM")
     field(TWSV, "NO_ALARM")
     field(THSV, "MAJOR")
-    field(FRSV, "MINOR")
 }
 
 # State control setpoint
@@ -276,14 +368,18 @@ record(seq, "$(P):STATE_PROCESS")
     field(DESC, "Process State Command")
     field(SELM, "Specified")
     field(SELL, "$(P):STATE_SP NPP MS")
+    # Link 0: OFF command → go to STANDBY
+    field(DOL0, "1")
+    field(LNK0, "$(P):CMD_STANDBY PP")
+    # Link 1: STANDBY command
     field(DOL1, "1")
-    field(LNK1, "$(P):CMD_GLOBAL_OFF PP")
+    field(LNK1, "$(P):CMD_STANDBY PP")
+    # Link 2: ON command
     field(DOL2, "1")
-    field(LNK2, "$(P):CMD_STANDBY PP")
+    field(LNK2, "$(P):CMD_POWER_ON PP")
+    # Link 3: RESET command
     field(DOL3, "1")
-    field(LNK3, "$(P):CMD_POWER_ON PP")
-    field(DOL4, "1")
-    field(LNK4, "$(P):CMD_RESET PP")
+    field(LNK3, "$(P):CMD_RESET PP")
 }
 
 # Interlock status

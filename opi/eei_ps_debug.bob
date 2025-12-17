@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>EEI PS Debug - All Registers</name>
+  <width>800</width>
+  <height>1400</height>
+  <background_color>
+    <color red="240" green="240" blue="240"/>
+  </background_color>
+  
+  <!-- Title -->
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>EEI Power Supply - DEBUG: All 45 Holding Registers</text>
+    <x>10</x>
+    <y>10</y>
+    <width>780</width>
+    <height>40</height>
+    <font>
+      <font family="Liberation Sans" size="18" style="BOLD"/>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+    <foreground_color>
+      <color red="128" green="0" blue="0"/>
+    </foreground_color>
+  </widget>
+  
+  <!-- Column Headers -->
+  <widget type="label" version="2.0.0">
+    <name>RegHeader</name>
+    <text>Reg</text>
+    <x>10</x>
+    <y>60</y>
+    <width>60</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" size="12" style="BOLD"/>
+    </font>
+  </widget>
+  
+  <widget type="label" version="2.0.0">
+    <name>ValueHeader</name>
+    <text>Value (Dec)</text>
+    <x>80</x>
+    <y>60</y>
+    <width>100</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" size="12" style="BOLD"/>
+    </font>
+  </widget>
+  
+  <widget type="label" version="2.0.0">
+    <name>HexHeader</name>
+    <text>Value (Hex)</text>
+    <x>190</x>
+    <y>60</y>
+    <width>100</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" size="12" style="BOLD"/>
+    </font>
+  </widget>
+  
+  <widget type="label" version="2.0.0">
+    <name>DescHeader</name>
+    <text>Description</text>
+    <x>300</x>
+    <y>60</y>
+    <width>480</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" size="12" style="BOLD"/>
+    </font>
+  </widget>
+  
+  <!-- ALL 45 Registers (0-44) -->
+  
+  <!-- Register 0 -->
+  <widget type="label" version="2.0.0"><name>Reg00</name><text>0</text><x>10</x><y>90</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val00</name><pv_name>$(P):$(R):DEBUG_REG00</pv_name><x>80</x><y>90</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex00</name><pv_name>$(P):$(R):DEBUG_REG00</pv_name><x>190</x><y>90</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc00</name><text>Command Word 1</text><x>300</x><y>90</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 1 -->
+  <widget type="label" version="2.0.0"><name>Reg01</name><text>1</text><x>10</x><y>115</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val01</name><pv_name>$(P):$(R):DEBUG_REG01</pv_name><x>80</x><y>115</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex01</name><pv_name>$(P):$(R):DEBUG_REG01</pv_name><x>190</x><y>115</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc01</name><text>Command Word 2 (Polarity Control)</text><x>300</x><y>115</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 2 -->
+  <widget type="label" version="2.0.0"><name>Reg02</name><text>2</text><x>10</x><y>140</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val02</name><pv_name>$(P):$(R):DEBUG_REG02</pv_name><x>80</x><y>140</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex02</name><pv_name>$(P):$(R):DEBUG_REG02</pv_name><x>190</x><y>140</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc02</name><text>Current Reference (mA)</text><x>300</x><y>140</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 3 -->
+  <widget type="label" version="2.0.0"><name>Reg03</name><text>3</text><x>10</x><y>165</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val03</name><pv_name>$(P):$(R):DEBUG_REG03</pv_name><x>80</x><y>165</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex03</name><pv_name>$(P):$(R):DEBUG_REG03</pv_name><x>190</x><y>165</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc03</name><text>Current Sign (0=Pos, 1=Neg)</text><x>300</x><y>165</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 4 -->
+  <widget type="label" version="2.0.0"><name>Reg04</name><text>4</text><x>10</x><y>190</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val04</name><pv_name>$(P):$(R):DEBUG_REG04</pv_name><x>80</x><y>190</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex04</name><pv_name>$(P):$(R):DEBUG_REG04</pv_name><x>190</x><y>190</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc04</name><text>Ramp Rate (A/s)</text><x>300</x><y>190</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 5 -->
+  <widget type="label" version="2.0.0"><name>Reg05</name><text>5</text><x>10</x><y>215</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val05</name><pv_name>$(P):$(R):DEBUG_REG05</pv_name><x>80</x><y>215</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex05</name><pv_name>$(P):$(R):DEBUG_REG05</pv_name><x>190</x><y>215</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc05</name><text>Cycle Pattern 1 (Cycles at Set)</text><x>300</x><y>215</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 6 -->
+  <widget type="label" version="2.0.0"><name>Reg06</name><text>6</text><x>10</x><y>240</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val06</name><pv_name>$(P):$(R):DEBUG_REG06</pv_name><x>80</x><y>240</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex06</name><pv_name>$(P):$(R):DEBUG_REG06</pv_name><x>190</x><y>240</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc06</name><text>Cycle Pattern 0 (Cycles at Zero)</text><x>300</x><y>240</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 7 -->
+  <widget type="label" version="2.0.0"><name>Reg07</name><text>7</text><x>10</x><y>265</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val07</name><pv_name>$(P):$(R):DEBUG_REG07</pv_name><x>80</x><y>265</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex07</name><pv_name>$(P):$(R):DEBUG_REG07</pv_name><x>190</x><y>265</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc07</name><text>Reserved/Unknown</text><x>300</x><y>265</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 8 -->
+  <widget type="label" version="2.0.0"><name>Reg08</name><text>8</text><x>10</x><y>290</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val08</name><pv_name>$(P):$(R):DEBUG_REG08</pv_name><x>80</x><y>290</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex08</name><pv_name>$(P):$(R):DEBUG_REG08</pv_name><x>190</x><y>290</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc08</name><text>Voltage Scale</text><x>300</x><y>290</y><width>480</width><height>20</height></widget>
+  
+  <!-- Register 9 -->
+  <widget type="label" version="2.0.0"><name>Reg09</name><text>9</text><x>10</x><y>315</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val09</name><pv_name>$(P):$(R):DEBUG_REG09</pv_name><x>80</x><y>315</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex09</name><pv_name>$(P):$(R):DEBUG_REG09</pv_name><x>190</x><y>315</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc09</name><text>Current Scale</text><x>300</x><y>315</y><width>480</width><height>20</height></widget>
+  
+  <!-- Registers 10-20 -->
+  <widget type="label" version="2.0.0"><name>Reg10</name><text>10</text><x>10</x><y>340</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val10</name><pv_name>$(P):$(R):DEBUG_REG10</pv_name><x>80</x><y>340</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex10</name><pv_name>$(P):$(R):DEBUG_REG10</pv_name><x>190</x><y>340</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc10</name><text>Reserved/Unknown</text><x>300</x><y>340</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg11</name><text>11</text><x>10</x><y>365</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val11</name><pv_name>$(P):$(R):DEBUG_REG11</pv_name><x>80</x><y>365</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex11</name><pv_name>$(P):$(R):DEBUG_REG11</pv_name><x>190</x><y>365</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc11</name><text>Reserved/Unknown</text><x>300</x><y>365</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg12</name><text>12</text><x>10</x><y>390</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val12</name><pv_name>$(P):$(R):DEBUG_REG12</pv_name><x>80</x><y>390</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex12</name><pv_name>$(P):$(R):DEBUG_REG12</pv_name><x>190</x><y>390</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc12</name><text>Reserved/Unknown</text><x>300</x><y>390</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg13</name><text>13</text><x>10</x><y>415</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val13</name><pv_name>$(P):$(R):DEBUG_REG13</pv_name><x>80</x><y>415</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex13</name><pv_name>$(P):$(R):DEBUG_REG13</pv_name><x>190</x><y>415</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc13</name><text>Reserved/Unknown</text><x>300</x><y>415</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg14</name><text>14</text><x>10</x><y>440</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val14</name><pv_name>$(P):$(R):DEBUG_REG14</pv_name><x>80</x><y>440</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex14</name><pv_name>$(P):$(R):DEBUG_REG14</pv_name><x>190</x><y>440</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc14</name><text>Reserved/Unknown</text><x>300</x><y>440</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg15</name><text>15</text><x>10</x><y>465</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val15</name><pv_name>$(P):$(R):DEBUG_REG15</pv_name><x>80</x><y>465</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex15</name><pv_name>$(P):$(R):DEBUG_REG15</pv_name><x>190</x><y>465</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc15</name><text>Reserved/Unknown</text><x>300</x><y>465</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg16</name><text>16</text><x>10</x><y>490</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val16</name><pv_name>$(P):$(R):DEBUG_REG16</pv_name><x>80</x><y>490</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex16</name><pv_name>$(P):$(R):DEBUG_REG16</pv_name><x>190</x><y>490</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc16</name><text>Reserved/Unknown</text><x>300</x><y>490</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg17</name><text>17</text><x>10</x><y>515</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val17</name><pv_name>$(P):$(R):DEBUG_REG17</pv_name><x>80</x><y>515</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex17</name><pv_name>$(P):$(R):DEBUG_REG17</pv_name><x>190</x><y>515</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc17</name><text>Reserved/Unknown</text><x>300</x><y>515</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg18</name><text>18</text><x>10</x><y>540</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val18</name><pv_name>$(P):$(R):DEBUG_REG18</pv_name><x>80</x><y>540</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex18</name><pv_name>$(P):$(R):DEBUG_REG18</pv_name><x>190</x><y>540</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc18</name><text>Reserved/Unknown</text><x>300</x><y>540</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg19</name><text>19</text><x>10</x><y>565</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val19</name><pv_name>$(P):$(R):DEBUG_REG19</pv_name><x>80</x><y>565</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex19</name><pv_name>$(P):$(R):DEBUG_REG19</pv_name><x>190</x><y>565</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc19</name><text>Reserved/Unknown</text><x>300</x><y>565</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg20</name><text>20</text><x>10</x><y>590</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val20</name><pv_name>$(P):$(R):DEBUG_REG20</pv_name><x>80</x><y>590</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex20</name><pv_name>$(P):$(R):DEBUG_REG20</pv_name><x>190</x><y>590</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc20</name><text>Reserved/Unknown</text><x>300</x><y>590</y><width>480</width><height>20</height></widget>
+  
+  <!-- Registers 21-28 (Status and Readbacks) - HIGHLIGHTED -->
+  <widget type="label" version="2.0.0"><name>Reg21</name><text>21</text><x>10</x><y>615</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="0" green="0" blue="128"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val21</name><pv_name>$(P):$(R):DEBUG_REG21</pv_name><x>80</x><y>615</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex21</name><pv_name>$(P):$(R):DEBUG_REG21</pv_name><x>190</x><y>615</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc21</name><text>Status Word 1</text><x>300</x><y>615</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg22</name><text>22</text><x>10</x><y>640</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="0" green="0" blue="128"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val22</name><pv_name>$(P):$(R):DEBUG_REG22</pv_name><x>80</x><y>640</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex22</name><pv_name>$(P):$(R):DEBUG_REG22</pv_name><x>190</x><y>640</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc22</name><text>Status Word 2 (Polarity)</text><x>300</x><y>640</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg23</name><text>23</text><x>10</x><y>665</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="0" green="0" blue="128"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val23</name><pv_name>$(P):$(R):DEBUG_REG23</pv_name><x>80</x><y>665</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex23</name><pv_name>$(P):$(R):DEBUG_REG23</pv_name><x>190</x><y>665</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc23</name><text>Ramp Rate Active (A/s)</text><x>300</x><y>665</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg24</name><text>24</text><x>10</x><y>690</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="0" green="0" blue="128"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val24</name><pv_name>$(P):$(R):DEBUG_REG24</pv_name><x>80</x><y>690</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex24</name><pv_name>$(P):$(R):DEBUG_REG24</pv_name><x>190</x><y>690</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc24</name><text>Real Current (mA)</text><x>300</x><y>690</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg25</name><text>25</text><x>10</x><y>715</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="0" green="0" blue="128"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val25</name><pv_name>$(P):$(R):DEBUG_REG25</pv_name><x>80</x><y>715</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex25</name><pv_name>$(P):$(R):DEBUG_REG25</pv_name><x>190</x><y>715</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc25</name><text>Current Sign RB (0=Pos, 1=Neg)</text><x>300</x><y>715</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg26</name><text>26</text><x>10</x><y>740</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="0" green="0" blue="128"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val26</name><pv_name>$(P):$(R):DEBUG_REG26</pv_name><x>80</x><y>740</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex26</name><pv_name>$(P):$(R):DEBUG_REG26</pv_name><x>190</x><y>740</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc26</name><text>Real Voltage (0.1V units)</text><x>300</x><y>740</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg27</name><text>27</text><x>10</x><y>765</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="128" green="0" blue="0"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val27</name><pv_name>$(P):$(R):DEBUG_REG27</pv_name><x>80</x><y>765</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex27</name><pv_name>$(P):$(R):DEBUG_REG27</pv_name><x>190</x><y>765</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc27</name><text>Fault Word 1 (PLC Faults)</text><x>300</x><y>765</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg28</name><text>28</text><x>10</x><y>790</y><width>60</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font><foreground_color><color red="128" green="0" blue="0"/></foreground_color></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val28</name><pv_name>$(P):$(R):DEBUG_REG28</pv_name><x>80</x><y>790</y><width>100</width><height>20</height><format>0</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex28</name><pv_name>$(P):$(R):DEBUG_REG28</pv_name><x>190</x><y>790</y><width>100</width><height>20</height><format>6</format><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  <widget type="label" version="2.0.0"><name>Desc28</name><text>Fault Word 2 (DC/DC AC/DC Faults)</text><x>300</x><y>790</y><width>480</width><height>20</height><font><font family="Liberation Sans" size="11" style="BOLD"/></font></widget>
+  
+  <!-- Registers 29-44 -->
+  <widget type="label" version="2.0.0"><name>Reg29</name><text>29</text><x>10</x><y>815</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val29</name><pv_name>$(P):$(R):DEBUG_REG29</pv_name><x>80</x><y>815</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex29</name><pv_name>$(P):$(R):DEBUG_REG29</pv_name><x>190</x><y>815</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc29</name><text>Reserved/Unknown</text><x>300</x><y>815</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg30</name><text>30</text><x>10</x><y>840</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val30</name><pv_name>$(P):$(R):DEBUG_REG30</pv_name><x>80</x><y>840</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex30</name><pv_name>$(P):$(R):DEBUG_REG30</pv_name><x>190</x><y>840</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc30</name><text>Reserved/Unknown</text><x>300</x><y>840</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg31</name><text>31</text><x>10</x><y>865</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val31</name><pv_name>$(P):$(R):DEBUG_REG31</pv_name><x>80</x><y>865</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex31</name><pv_name>$(P):$(R):DEBUG_REG31</pv_name><x>190</x><y>865</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc31</name><text>Reserved/Unknown</text><x>300</x><y>865</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg32</name><text>32</text><x>10</x><y>890</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val32</name><pv_name>$(P):$(R):DEBUG_REG32</pv_name><x>80</x><y>890</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex32</name><pv_name>$(P):$(R):DEBUG_REG32</pv_name><x>190</x><y>890</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc32</name><text>Fault Detail / Sensor Data</text><x>300</x><y>890</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg33</name><text>33</text><x>10</x><y>915</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val33</name><pv_name>$(P):$(R):DEBUG_REG33</pv_name><x>80</x><y>915</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex33</name><pv_name>$(P):$(R):DEBUG_REG33</pv_name><x>190</x><y>915</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc33</name><text>Fault Detail / Sensor Data</text><x>300</x><y>915</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg34</name><text>34</text><x>10</x><y>940</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val34</name><pv_name>$(P):$(R):DEBUG_REG34</pv_name><x>80</x><y>940</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex34</name><pv_name>$(P):$(R):DEBUG_REG34</pv_name><x>190</x><y>940</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc34</name><text>Fault Detail / Sensor Data</text><x>300</x><y>940</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg35</name><text>35</text><x>10</x><y>965</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val35</name><pv_name>$(P):$(R):DEBUG_REG35</pv_name><x>80</x><y>965</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex35</name><pv_name>$(P):$(R):DEBUG_REG35</pv_name><x>190</x><y>965</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc35</name><text>Fault Detail / Sensor Data</text><x>300</x><y>965</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg36</name><text>36</text><x>10</x><y>990</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val36</name><pv_name>$(P):$(R):DEBUG_REG36</pv_name><x>80</x><y>990</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex36</name><pv_name>$(P):$(R):DEBUG_REG36</pv_name><x>190</x><y>990</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc36</name><text>Fault Detail / Sensor Data</text><x>300</x><y>990</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg37</name><text>37</text><x>10</x><y>1015</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val37</name><pv_name>$(P):$(R):DEBUG_REG37</pv_name><x>80</x><y>1015</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex37</name><pv_name>$(P):$(R):DEBUG_REG37</pv_name><x>190</x><y>1015</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc37</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1015</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg38</name><text>38</text><x>10</x><y>1040</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val38</name><pv_name>$(P):$(R):DEBUG_REG38</pv_name><x>80</x><y>1040</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex38</name><pv_name>$(P):$(R):DEBUG_REG38</pv_name><x>190</x><y>1040</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc38</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1040</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg39</name><text>39</text><x>10</x><y>1065</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val39</name><pv_name>$(P):$(R):DEBUG_REG39</pv_name><x>80</x><y>1065</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex39</name><pv_name>$(P):$(R):DEBUG_REG39</pv_name><x>190</x><y>1065</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc39</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1065</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg40</name><text>40</text><x>10</x><y>1090</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val40</name><pv_name>$(P):$(R):DEBUG_REG40</pv_name><x>80</x><y>1090</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex40</name><pv_name>$(P):$(R):DEBUG_REG40</pv_name><x>190</x><y>1090</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc40</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1090</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg41</name><text>41</text><x>10</x><y>1115</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val41</name><pv_name>$(P):$(R):DEBUG_REG41</pv_name><x>80</x><y>1115</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex41</name><pv_name>$(P):$(R):DEBUG_REG41</pv_name><x>190</x><y>1115</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc41</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1115</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg42</name><text>42</text><x>10</x><y>1140</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val42</name><pv_name>$(P):$(R):DEBUG_REG42</pv_name><x>80</x><y>1140</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex42</name><pv_name>$(P):$(R):DEBUG_REG42</pv_name><x>190</x><y>1140</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc42</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1140</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg43</name><text>43</text><x>10</x><y>1165</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val43</name><pv_name>$(P):$(R):DEBUG_REG43</pv_name><x>80</x><y>1165</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex43</name><pv_name>$(P):$(R):DEBUG_REG43</pv_name><x>190</x><y>1165</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc43</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1165</y><width>480</width><height>20</height></widget>
+  
+  <widget type="label" version="2.0.0"><name>Reg44</name><text>44</text><x>10</x><y>1190</y><width>60</width><height>20</height></widget>
+  <widget type="textupdate" version="2.0.0"><name>Val44</name><pv_name>$(P):$(R):DEBUG_REG44</pv_name><x>80</x><y>1190</y><width>100</width><height>20</height><format>0</format></widget>
+  <widget type="textupdate" version="2.0.0"><name>Hex44</name><pv_name>$(P):$(R):DEBUG_REG44</pv_name><x>190</x><y>1190</y><width>100</width><height>20</height><format>6</format></widget>
+  <widget type="label" version="2.0.0"><name>Desc44</name><text>Fault Detail / Sensor Data</text><x>300</x><y>1190</y><width>480</width><height>20</height></widget>
+  
+  <!-- Info Footer -->
+  <widget type="label" version="2.0.0">
+    <name>InfoNote</name>
+    <text>Key registers (21-28) are highlighted. Status words (blue), Fault words (red).</text>
+    <x>10</x>
+    <y>1230</y>
+    <width>780</width>
+    <height>30</height>
+    <font>
+      <font family="Liberation Sans" size="11" style="ITALIC"/>
+    </font>
+    <foreground_color>
+      <color red="80" green="80" blue="80"/>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  
+  <!-- PV Prefix Label -->
+  <widget type="label" version="2.0.0">
+    <name>PVPrefix</name>
+    <text>PV Prefix: $(P)</text>
+    <x>10</x>
+    <y>1260</y>
+    <width>780</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" size="10"/>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  
+</display>

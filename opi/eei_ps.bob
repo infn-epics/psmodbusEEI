@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
-  <name>EEI Power Supply Control</name>
+  <name>EEI Power Supply Control $(R)</name>
   <macros>
-    <P>EEI:PS01</P>
   </macros>
   <width>1200</width>
   <height>1040</height>
@@ -12,7 +11,7 @@
   </background_color>
   <widget type="label" version="2.0.0">
     <name>Title</name>
-    <text>EEI Power Supply Control</text>
+    <text>EEI Power Supply Control $(R)</text>
     <x>10</x>
     <y>10</y>
     <width>600</width>
@@ -40,7 +39,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Standby LED</name>
-      <pv_name>$(P):STAT_STANDBY</pv_name>
+      <pv_name>$(P):$(R):STAT_STANDBY</pv_name>
       <x>10</x>
       <y>35</y>
       <width>30</width>
@@ -54,7 +53,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>PowerOn LED</name>
-      <pv_name>$(P):STAT_POWER_ON</pv_name>
+      <pv_name>$(P):$(R):STAT_POWER_ON</pv_name>
       <x>10</x>
       <y>70</y>
       <width>30</width>
@@ -68,7 +67,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Faulty LED</name>
-      <pv_name>$(P):STAT_FAULTY</pv_name>
+      <pv_name>$(P):$(R):STAT_FAULTY</pv_name>
       <x>10</x>
       <y>105</y>
       <width>30</width>
@@ -82,7 +81,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Remote LED</name>
-      <pv_name>$(P):STAT_REMOTE</pv_name>
+      <pv_name>$(P):$(R):STAT_REMOTE</pv_name>
       <x>10</x>
       <y>140</y>
       <width>30</width>
@@ -96,7 +95,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>Polarity Positive</name>
-      <pv_name>$(P):STAT_POLARITY_POS</pv_name>
+      <pv_name>$(P):$(R):STAT_POLARITY_POS</pv_name>
       <x>200</x>
       <y>40</y>
       <width>150</width>
@@ -104,7 +103,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>Polarity Negative</name>
-      <pv_name>$(P):STAT_POLARITY_NEG</pv_name>
+      <pv_name>$(P):$(R):STAT_POLARITY_NEG</pv_name>
       <x>200</x>
       <y>75</y>
       <width>150</width>
@@ -132,11 +131,11 @@
       <actions>
         <action type="write_pv">
           <description>Set Standby</description>
-          <pv_name>$(P):CMD_STANDBY</pv_name>
+          <pv_name>$(P):$(R):CMD_STANDBY</pv_name>
           <value>1</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_STANDBY</pv_name>
+      <pv_name>$(P):$(R):CMD_STANDBY</pv_name>
       <text>Standby</text>
       <x>10</x>
       <y>35</y>
@@ -146,11 +145,11 @@
       <actions>
         <action type="write_pv">
           <description>Power On</description>
-          <pv_name>$(P):CMD_POWER_ON</pv_name>
+          <pv_name>$(P):$(R):CMD_POWER_ON</pv_name>
           <value>Power On</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_POWER_ON</pv_name>
+      <pv_name>$(P):$(R):CMD_POWER_ON</pv_name>
       <text>Power On</text>
       <x>120</x>
       <y>35</y>
@@ -160,11 +159,11 @@
       <actions>
         <action type="write_pv">
           <description>Global Off</description>
-          <pv_name>$(P):CMD_GLOBAL_OFF</pv_name>
+          <pv_name>$(P):$(R):CMD_GLOBAL_OFF</pv_name>
           <value>1</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_GLOBAL_OFF</pv_name>
+      <pv_name>$(P):$(R):CMD_GLOBAL_OFF</pv_name>
       <text>Global Off</text>
       <x>230</x>
       <y>35</y>
@@ -178,11 +177,11 @@
       <actions>
         <action type="write_pv">
           <description>Reset</description>
-          <pv_name>$(P):CMD_RESET</pv_name>
+          <pv_name>$(P):$(R):CMD_RESET</pv_name>
           <value>1</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_RESET</pv_name>
+      <pv_name>$(P):$(R):CMD_RESET</pv_name>
       <text>Reset</text>
       <x>10</x>
       <y>75</y>
@@ -196,11 +195,11 @@
       <actions>
         <action type="write_pv">
           <description>Start Ramp</description>
-          <pv_name>$(P):CMD_START_RAMP</pv_name>
+          <pv_name>$(P):$(R):CMD_START_RAMP</pv_name>
           <value>1</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_START_RAMP</pv_name>
+      <pv_name>$(P):$(R):CMD_START_RAMP</pv_name>
       <text>Start Ramp</text>
       <x>120</x>
       <y>75</y>
@@ -218,7 +217,7 @@
           <value>4</value>
         </action>
       </actions>
-      <pv_name>$(P):POLARITY_CTRL</pv_name>
+      <pv_name>$(P):$(R):POLARITY_CTRL</pv_name>
       <x>120</x>
       <y>130</y>
       <background_color>
@@ -228,13 +227,13 @@
     </widget>
     <widget type="combo" version="2.0.0">
       <name>PowerOn Button_1</name>
-      <pv_name>$(P):CMD_POWER_ON</pv_name>
+      <pv_name>$(P):$(R):CMD_POWER_ON</pv_name>
       <x>230</x>
       <y>75</y>
       <actions>
         <action type="write_pv">
           <description>Power On</description>
-          <pv_name>$(P):CMD_POWER_ON</pv_name>
+          <pv_name>$(P):$(R):CMD_POWER_ON</pv_name>
           <value>Power On</value>
         </action>
       </actions>
@@ -248,7 +247,7 @@
           <value>1</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_POLARITY_NEG_REQ</pv_name>
+      <pv_name>$(P):$(R):CMD_POLARITY_NEG_REQ</pv_name>
       <x>10</x>
       <y>130</y>
       <background_color>
@@ -265,7 +264,7 @@
           <value>1</value>
         </action>
       </actions>
-      <pv_name>$(P):CMD_POLARITY_POS_REQ</pv_name>
+      <pv_name>$(P):$(R):CMD_POLARITY_POS_REQ</pv_name>
       <x>230</x>
       <y>130</y>
       <background_color>
@@ -302,7 +301,7 @@
     </widget>
     <widget type="textentry" version="3.0.0">
       <name>Current Setpoint</name>
-      <pv_name>$(P):CURR_SET</pv_name>
+      <pv_name>$(P):$(R):CURR_SET</pv_name>
       <x>170</x>
       <y>40</y>
       <width>120</width>
@@ -327,7 +326,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>Current Readback</name>
-      <pv_name>$(P):CURR_RB</pv_name>
+      <pv_name>$(P):$(R):CURR_RB</pv_name>
       <x>170</x>
       <y>80</y>
       <width>120</width>
@@ -352,7 +351,7 @@
     </widget>
     <widget type="textentry" version="3.0.0">
       <name>Ramp Setpoint</name>
-      <pv_name>$(P):RAMP_RATE_SET</pv_name>
+      <pv_name>$(P):$(R):RAMP_RATE_SET</pv_name>
       <x>560</x>
       <y>40</y>
       <width>120</width>
@@ -376,7 +375,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>Ramp Readback</name>
-      <pv_name>$(P):RAMP_RATE_RB</pv_name>
+      <pv_name>$(P):$(R):RAMP_RATE_RB</pv_name>
       <x>560</x>
       <y>80</y>
       <width>120</width>
@@ -419,7 +418,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>Voltage Readback</name>
-      <pv_name>$(P):VOLT_RB</pv_name>
+      <pv_name>$(P):$(R):VOLT_RB</pv_name>
       <x>170</x>
       <y>40</y>
       <width>120</width>
@@ -463,7 +462,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>DCDC Temp</name>
-      <pv_name>$(P):DCDC_HEATSINK_TEMP_RB</pv_name>
+      <pv_name>$(P):$(R):DCDC_HEATSINK_TEMP_RB</pv_name>
       <x>170</x>
       <y>40</y>
       <width>120</width>
@@ -488,7 +487,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>ACDC1 Voltage</name>
-      <pv_name>$(P):ACDC1_VOLT_OUT_RB</pv_name>
+      <pv_name>$(P):$(R):ACDC1_VOLT_OUT_RB</pv_name>
       <x>170</x>
       <y>80</y>
       <width>120</width>
@@ -513,7 +512,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>ACDC1 Current</name>
-      <pv_name>$(P):ACDC1_CURR_OUT_RB</pv_name>
+      <pv_name>$(P):$(R):ACDC1_CURR_OUT_RB</pv_name>
       <x>170</x>
       <y>120</y>
       <width>120</width>
@@ -538,7 +537,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>ACDC2 Voltage</name>
-      <pv_name>$(P):ACDC2_VOLT_OUT_RB</pv_name>
+      <pv_name>$(P):$(R):ACDC2_VOLT_OUT_RB</pv_name>
       <x>170</x>
       <y>160</y>
       <width>120</width>
@@ -563,7 +562,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>ACDC2 Current</name>
-      <pv_name>$(P):ACDC2_CURR_OUT_RB</pv_name>
+      <pv_name>$(P):$(R):ACDC2_CURR_OUT_RB</pv_name>
       <x>170</x>
       <y>200</y>
       <width>120</width>
@@ -599,7 +598,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault PLC DCDC LED</name>
-      <pv_name>$(P):FAULT_PLC_DCDC</pv_name>
+      <pv_name>$(P):$(R):FAULT_PLC_DCDC</pv_name>
       <x>10</x>
       <y>40</y>
       <width>25</width>
@@ -614,7 +613,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault PLC DCCT LED</name>
-      <pv_name>$(P):FAULT_PLC_DCCT_PS</pv_name>
+      <pv_name>$(P):$(R):FAULT_PLC_DCCT_PS</pv_name>
       <x>10</x>
       <y>70</y>
       <width>25</width>
@@ -629,7 +628,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault PLC MAG ILK1 LED</name>
-      <pv_name>$(P):FAULT_PLC_MAG_ILK1</pv_name>
+      <pv_name>$(P):$(R):FAULT_PLC_MAG_ILK1</pv_name>
       <x>10</x>
       <y>100</y>
       <width>25</width>
@@ -644,7 +643,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault PLC MAG ILK2 LED</name>
-      <pv_name>$(P):FAULT_PLC_MAG_ILK2</pv_name>
+      <pv_name>$(P):$(R):FAULT_PLC_MAG_ILK2</pv_name>
       <x>10</x>
       <y>130</y>
       <width>25</width>
@@ -659,7 +658,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault PLC Water LED</name>
-      <pv_name>$(P):FAULT_PLC_WATER_FLOW</pv_name>
+      <pv_name>$(P):$(R):FAULT_PLC_WATER_FLOW</pv_name>
       <x>10</x>
       <y>160</y>
       <width>25</width>
@@ -674,7 +673,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault DCDC Overcurr LED</name>
-      <pv_name>$(P):FAULT_DCDC_OVERCURR</pv_name>
+      <pv_name>$(P):$(R):FAULT_DCDC_OVERCURR</pv_name>
       <x>260</x>
       <y>40</y>
       <width>25</width>
@@ -689,7 +688,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault DCDC Therm LED</name>
-      <pv_name>$(P):FAULT_DCDC_THERM_PROT</pv_name>
+      <pv_name>$(P):$(R):FAULT_DCDC_THERM_PROT</pv_name>
       <x>260</x>
       <y>70</y>
       <width>25</width>
@@ -704,7 +703,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault DCDC Overtemp LED</name>
-      <pv_name>$(P):FAULT_DCDC_OVERTEMP</pv_name>
+      <pv_name>$(P):$(R):FAULT_DCDC_OVERTEMP</pv_name>
       <x>260</x>
       <y>100</y>
       <width>25</width>
@@ -719,7 +718,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault DCDC DCLink Low LED</name>
-      <pv_name>$(P):FAULT_DCDC_DCLINK_LOW</pv_name>
+      <pv_name>$(P):$(R):FAULT_DCDC_DCLINK_LOW</pv_name>
       <x>260</x>
       <y>130</y>
       <width>25</width>
@@ -734,7 +733,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault DCDC DCLink High LED</name>
-      <pv_name>$(P):FAULT_DCDC_DCLINK_HIGH</pv_name>
+      <pv_name>$(P):$(R):FAULT_DCDC_DCLINK_HIGH</pv_name>
       <x>260</x>
       <y>160</y>
       <width>25</width>
@@ -749,7 +748,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault ACDC1 Overcurr LED</name>
-      <pv_name>$(P):FAULT_ACDC1_OVERCURR</pv_name>
+      <pv_name>$(P):$(R):FAULT_ACDC1_OVERCURR</pv_name>
       <x>520</x>
       <y>40</y>
       <width>25</width>
@@ -764,7 +763,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault ACDC1 Water LED</name>
-      <pv_name>$(P):FAULT_ACDC1_WATER_TEMP</pv_name>
+      <pv_name>$(P):$(R):FAULT_ACDC1_WATER_TEMP</pv_name>
       <x>520</x>
       <y>70</y>
       <width>25</width>
@@ -779,7 +778,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault ACDC2 Overcurr LED</name>
-      <pv_name>$(P):FAULT_ACDC2_OVERCURR</pv_name>
+      <pv_name>$(P):$(R):FAULT_ACDC2_OVERCURR</pv_name>
       <x>520</x>
       <y>100</y>
       <width>25</width>
@@ -794,7 +793,7 @@
     </widget>
     <widget type="led" version="2.0.0">
       <name>Fault ACDC2 Water LED</name>
-      <pv_name>$(P):FAULT_ACDC2_WATER_TEMP</pv_name>
+      <pv_name>$(P):$(R):FAULT_ACDC2_WATER_TEMP</pv_name>
       <x>520</x>
       <y>130</y>
       <width>25</width>
@@ -820,7 +819,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>PLC Fault Word1</name>
-      <pv_name>$(P):PLC_FAULT_WORD1_RB</pv_name>
+      <pv_name>$(P):$(R):PLC_FAULT_WORD1_RB</pv_name>
       <x>10</x>
       <y>250</y>
       <width>120</width>
@@ -836,7 +835,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>DCDC Fault Word1</name>
-      <pv_name>$(P):DCDC_FAULT_WORD1_RB</pv_name>
+      <pv_name>$(P):$(R):DCDC_FAULT_WORD1_RB</pv_name>
       <x>260</x>
       <y>250</y>
       <width>120</width>

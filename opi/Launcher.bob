@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Display</name>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB201</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB201</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <x>10</x>
+    <y>10</y>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_1</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB201 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB201</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <x>160</x>
+    <y>10</y>
+    <width>200</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_2</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB201 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB201</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <x>10</x>
+    <y>60</y>
+    <width>200</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+</display>
