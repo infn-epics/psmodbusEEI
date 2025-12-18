@@ -37,6 +37,15 @@ psmodbusEEI_DBD += asyn.dbd
 psmodbusEEI_DBD += drvAsynIPPort.dbd
 psmodbusEEI_DBD += modbusSupport.dbd
 
+# Add SNL (State Notation Language) support
+ifneq ($(SNCSEQ),)
+    # Include dbd for SNL program registrar
+    psmodbusEEI_DBD += unimagControl.dbd
+    # SNL program source
+    psmodbusEEI_SRCS += unimagControl.st
+    psmodbusEEI_LIBS += seq pv
+endif
+
 # psmodbusEEI_registerRecordDeviceDriver.cpp derives from psmodbusEEI.dbd
 psmodbusEEI_SRCS += psmodbusEEI_registerRecordDeviceDriver.cpp
 

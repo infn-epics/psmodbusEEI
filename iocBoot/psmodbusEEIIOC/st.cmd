@@ -32,5 +32,8 @@ dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:QUATB201,PORT=EEI
 ## Start IOC
 iocInit()
 
+## Start SNL programs
+seq unimagControl, "P=BTF:MAG:EEI:QUATB201"
+
 ## Print IOC information
 dbl > pv_list.txt
