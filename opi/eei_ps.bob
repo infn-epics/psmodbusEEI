@@ -301,7 +301,7 @@
     </widget>
     <widget type="textentry" version="3.0.0">
       <name>Current Setpoint</name>
-      <pv_name>$(P):$(R):CURR_SET</pv_name>
+      <pv_name>$(P):$(R):CURRENT_SP</pv_name>
       <x>170</x>
       <y>40</y>
       <width>120</width>
@@ -326,7 +326,7 @@
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>Current Readback</name>
-      <pv_name>$(P):$(R):CURR_RB</pv_name>
+      <pv_name>$(P):$(R):CURRENT_RB</pv_name>
       <x>170</x>
       <y>80</y>
       <width>120</width>

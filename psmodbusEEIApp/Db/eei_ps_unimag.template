@@ -3,33 +3,32 @@
 # Requires eei_ps.template to be loaded
 # Logic implemented in unimagControl.st (SNL state program)
 
-################### UNIMAG Current Setpoint ####################
-# User sets current in A (positive or negative)
-# PV format: $(P):CURRENT_SP
-# Monitored by SNL program for automatic sequencing
-record(ao, "$(P):CURRENT_SP")
-{
-    field(DESC, "Current Setpoint (signed)")
-    field(EGU,  "A")
-    field(PREC, "3")
-    field(DRVH, "$(MAX_CURR=330)")
-    field(DRVL, "$(MIN_CURR=-330)")
-    field(HOPR, "$(MAX_CURR=330)")
-    field(LOPR, "$(MIN_CURR=-330)")
-}
+# ################### UNIMAG Current Setpoint ####################
+# # User sets current in A (positive or negative)
+# # PV format: $(P):CURRENT_SP
+# # Monitored by SNL program for automatic sequencing
+# record(ao, "$(P):CURRENT_SP")
+# {
+#     field(DESC, "Current Setpoint (signed)")
+#     field(EGU,  "A")
+#     field(PREC, "3")
+#     field(DRVH, "$(MAX_CURR=330)")
+#     field(DRVL, "$(MIN_CURR=-330)")
+#     field(HOPR, "$(MAX_CURR=330)")
+#     field(LOPR, "$(MIN_CURR=-330)")
+# }
 
-################### Status Readback ####################
-# Current readback (signed based on polarity)
-# PV format: $(P):CURRENT_RB
-record(calcout, "$(P):CURRENT_RB")
-{
-    field(DESC, "Current Readback (signed)")
-    field(INPA, "$(P):CURR_RB CP")
-    field(INPB, "$(P):STAT_POLARITY_NEG CP")
-    field(CALC, "B?-A:A")
-    field(EGU,  "A")
-    field(PREC, "3")
-}
+# ################### Status Readback ####################
+# # Current readback (signed based on polarity)
+# # PV format: $(P):CURRENT_RB
+# record(calcout, "$(P):CURRENT_RB")
+# {
+#     field(DESC, "Current Readback (signed)")
+#     field(INPA, "$(P):CURR_RB CP")
+#     field(CALC, "A")
+#     field(EGU,  "A")
+#     field(PREC, "3")
+# }
 
 # Overall status readback - decode state from individual bits
 # PV format: $(P):STATE_RB

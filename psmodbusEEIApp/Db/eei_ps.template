@@ -162,7 +162,7 @@ record(ao, "$(P):POLARITY_CTRL")
 
 
 ################### Current Reference (Register 40003 / 0x02) - Write ####################
-record(ao, "$(P):CURR_SET")
+record(ao, "$(P):CURRENT_SP")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT_WR) 2 $(TIMEOUT=1000))MODBUS_DATA")
@@ -177,7 +177,7 @@ record(ao, "$(P):CURR_SET")
 }
 
 ################### Current Sign (Register 40004 / 0x03) - Write ####################
-record(mbbo, "$(P):CURR_SET_SIGN")
+record(mbbo, "$(P):CURRENT_SP_SIGN")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT_WR) 3 $(TIMEOUT=1000))MODBUS_DATA")
@@ -355,7 +355,7 @@ record(ai, "$(P):RAMP_RATE_RB")
 }
 
 ################### Real Current (Register 40025 / 0x18) - Read ####################
-record(ai, "$(P):CURR_RB")
+record(ai, "$(P):CURRENT_RB")
 {
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT) 24 $(TIMEOUT=1000))MODBUS_DATA")
@@ -388,7 +388,7 @@ record(ai, "$(P):VOLT_SCALE_RB")
 }
 
 ################### Current Sign Readback (Register 40026 / 0x19) - Read ####################
-record(mbbi, "$(P):CURR_RB_SIGN")
+record(mbbi, "$(P):CURRENT_RB_SIGN")
 {
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT) 25 $(TIMEOUT=1000))MODBUS_DATA")
