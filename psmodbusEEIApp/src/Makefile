@@ -11,13 +11,11 @@ LIBRARY_IOC += psmodbusEEISupport
 DBD += psmodbusEEISupport.dbd
 
 # Add SNL (State Notation Language) support to library
-ifneq ($(SNCSEQ),)
-    # Include dbd for SNL program registrar
-    psmodbusEEISupport_DBD += unimagControl.dbd
-    # SNL program source
-    psmodbusEEISupport_SRCS += unimagControl.st
-    psmodbusEEISupport_LIBS += seq pv
-endif
+# Include dbd for SNL program registrar
+psmodbusEEISupport_DBD += unimagControl.dbd
+# SNL program source
+psmodbusEEISupport_SRCS += unimagControl.st
+psmodbusEEISupport_LIBS += seq pv
 
 psmodbusEEISupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
