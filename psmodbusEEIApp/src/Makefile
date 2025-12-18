@@ -5,25 +5,21 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS BELOW HERE
 
 # Build an IOC support library
-#LIBRARY_IOC += psmodbusEEISupport
+LIBRARY_IOC += psmodbusEEISupport
 
-# xxxRecord.h will be created from xxxRecord.dbd
-#DBDINC += xxxRecord
-# Install devXxxSoft.dbd into <top>/dbd
-#DBD += xxxSupport.dbd
+# Install support dbd into <top>/dbd
+DBD += psmodbusEEISupport.dbd
 
-# Compile and add the code to the support library
-#psmodbusEEISupport_SRCS += xxxRecord.c
-#psmodbusEEISupport_SRCS += devXxxSoft.c
+# Add SNL (State Notation Language) support to library
+ifneq ($(SNCSEQ),)
+    # Include dbd for SNL program registrar
+    psmodbusEEISupport_DBD += unimagControl.dbd
+    # SNL program source
+    psmodbusEEISupport_SRCS += unimagControl.st
+    psmodbusEEISupport_LIBS += seq pv
+endif
 
-# Link locally-provided code into the support library,
-# rather than directly into the IOC application.
-#psmodbusEEISupport_SRCS += dbSubExample.c
-#psmodbusEEISupport_SRCS += devpsmodbusEEIVersion.c
-#psmodbusEEISupport_SRCS += psmodbusEEIHello.c
-#psmodbusEEISupport_SRCS += initTrace.c
-
-#psmodbusEEISupport_LIBS += $(EPICS_BASE_IOC_LIBS)
+psmodbusEEISupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 # Build the IOC application
 PROD_IOC = psmodbusEEI
@@ -31,20 +27,15 @@ PROD_IOC = psmodbusEEI
 # psmodbusEEI.dbd will be created and installed
 DBD += psmodbusEEI.dbd
 
+# Ensure support dbd is built before main dbd
+$(COMMON_DIR)/psmodbusEEI.dbd: $(COMMON_DIR)/psmodbusEEISupport.dbd
+
 # psmodbusEEI.dbd will be made up from these files:
 psmodbusEEI_DBD += base.dbd
 psmodbusEEI_DBD += asyn.dbd
 psmodbusEEI_DBD += drvAsynIPPort.dbd
 psmodbusEEI_DBD += modbusSupport.dbd
-
-# Add SNL (State Notation Language) support
-ifneq ($(SNCSEQ),)
-    # Include dbd for SNL program registrar
-    psmodbusEEI_DBD += unimagControl.dbd
-    # SNL program source
-    psmodbusEEI_SRCS += unimagControl.st
-    psmodbusEEI_LIBS += seq pv
-endif
+psmodbusEEI_DBD += psmodbusEEISupport.dbd
 
 # psmodbusEEI_registerRecordDeviceDriver.cpp derives from psmodbusEEI.dbd
 psmodbusEEI_SRCS += psmodbusEEI_registerRecordDeviceDriver.cpp
@@ -54,7 +45,7 @@ psmodbusEEI_SRCS_DEFAULT += psmodbusEEIMain.cpp
 psmodbusEEI_SRCS_vxWorks += -nil-
 
 # Link in the code from our support library
-#psmodbusEEI_LIBS += psmodbusEEISupport
+psmodbusEEI_LIBS += psmodbusEEISupport
 
 # To build SNL programs, SNCSEQ must be defined
 # in the <top>/configure/RELEASE file
