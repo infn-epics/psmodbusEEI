@@ -16,11 +16,11 @@ assign current_sp to "{P}:CURRENT_SP";
 monitor current_sp;
 
 double current_rb;
-assign current_rb to "{P}:CURR_RB";
+assign current_rb to "{P}:CURRENT_RB";
 monitor current_rb;
 
 double curr_set;
-assign curr_set to "{P}:CURR_SET";
+assign curr_set to "{P}:CURRENT_SP";
 
 int stat_polarity_pos;
 assign stat_polarity_pos to "{P}:STAT_POLARITY_POS";
