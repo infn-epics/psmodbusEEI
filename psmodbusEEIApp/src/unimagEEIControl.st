@@ -1,4 +1,4 @@
-program unimagControl
+program unimagEEIControl
 
 /*
  * EPICS State Notation Language program for UNIMAG interface

@@ -33,7 +33,7 @@ dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:QUATB201,PORT=EEI
 iocInit()
 
 ## Start SNL programs
-seq unimagControl, "P=BTF:MAG:EEI:QUATB201"
+seq unimagEEIControl, "P=BTF:MAG:EEI:QUATB201"
 
 ## Print IOC information
 dbl > pv_list.txt
