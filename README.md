@@ -1,6 +1,6 @@
-# EEI Power Supply EPICS Modbus IOC
+# psmodbusEEI - EEI Power Supply IOC with Enhanced UNIMAG Control
 
-EPICS IOC for controlling EEI Power Supply via Modbus TCP protocol.
+Enhanced EPICS IOC for controlling EEI power supplies via Modbus/TCP with comprehensive UNIMAG state machine, debug logging, standardized status reporting, and configurable ramp parameters. This IOC provides automatic polarity switching, sequencing control, and standardized STATUS_RB enumeration matching the OCEM E642 implementation.
 
 ## Overview
 
@@ -44,6 +44,32 @@ psmodbusEEI/
    ```
 
 ## Configuration
+
+### Template Macros
+
+The IOC supports several macros for customizing power supply behavior:
+
+#### Required Macros
+- `P`: PV prefix (e.g., `BTF:MAG:EEI:QUATB201`)
+- `PORT`: Modbus read port name
+- `PORT_WR`: Modbus write port name
+
+#### Optional Ramp Configuration Macros (eei_ps.template)
+- `RAMP_MIN`: Minimum ramp rate in A/s (default: 10)
+- `RAMP_MAX`: Maximum ramp rate in A/s (default: 3474)
+- `RAMP_DEFAULT`: Default ramp rate value in A/s (default: 100)
+
+#### Example Usage
+```bash
+# Standard configuration with default ramp settings
+dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:QUATB201,PORT=QUATB201_RD,PORT_WR=QUATB201_WR")
+
+# Custom ramp configuration for precision applications
+dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:QUATB201,PORT=QUATB201_RD,PORT_WR=QUATB201_WR,RAMP_MIN=5,RAMP_MAX=1000,RAMP_DEFAULT=50")
+
+# High-power magnet with fast ramp capability  
+dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:DHPTB102,PORT=DHPTB102_RD,PORT_WR=DHPTB102_WR,RAMP_MIN=10,RAMP_MAX=3474,RAMP_DEFAULT=200")
+```
 
 ### Network Configuration
 

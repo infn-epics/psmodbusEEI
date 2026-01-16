@@ -10,8 +10,8 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install) into <top>/db
 # databases, templates, substitutions like this
+# Note: eei_ps_unimag.template has been merged into eei_ps.template
 DB += eei_ps.template
-DB += eei_ps_unimag.template
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

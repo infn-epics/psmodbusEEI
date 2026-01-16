@@ -13,10 +13,15 @@ DBD += psmodbusEEISupport.dbd
 # Add SNL (State Notation Language) support to library
 # Include dbd for SNL program registrar
 psmodbusEEISupport_DBD += unimagEEIControl.dbd
+# Include dbd for IOC shell functions
+psmodbusEEISupport_DBD += psmodbusEEIShell.dbd
+
 # SNL program source
 psmodbusEEISupport_SRCS += unimagEEIControl.st
-psmodbusEEISupport_LIBS += seq pv
+# IOC shell functions source
+psmodbusEEISupport_SRCS += psmodbusEEIShell.cpp
 
+psmodbusEEISupport_LIBS += seq pv
 psmodbusEEISupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 # Build the IOC application

@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
-  <name>Display</name>
+  <name>EEI Power Supply Launcher</name>
+  <width>600</width>
+  <height>1200</height>
+  
+  <!-- QUATB201 -->
   <widget type="action_button" version="3.0.0">
-    <name>Action Button</name>
+    <name>QUATB201</name>
     <actions>
       <action type="open_display">
         <description>QUATB201</description>
@@ -14,12 +18,14 @@
         <target>window</target>
       </action>
     </actions>
+    <text>QUATB201</text>
     <x>10</x>
     <y>10</y>
+    <width>120</width>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action Button_1</name>
+    <name>QUATB201_DEBUG</name>
     <actions>
       <action type="open_display">
         <description>QUATB201 DEBUG</description>
@@ -31,13 +37,14 @@
         <target>window</target>
       </action>
     </actions>
-    <x>160</x>
+    <text>DEBUG</text>
+    <x>140</x>
     <y>10</y>
-    <width>200</width>
+    <width>80</width>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action Button_2</name>
+    <name>QUATB201_UNIMAG</name>
     <actions>
       <action type="open_display">
         <description>QUATB201 UNIMAG</description>
@@ -49,9 +56,542 @@
         <target>window</target>
       </action>
     </actions>
-    <x>10</x>
-    <y>60</y>
-    <width>200</width>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>10</y>
+    <width>80</width>
     <tooltip>$(actions)</tooltip>
   </widget>
+
+  <!-- QUATB202 -->
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB202</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB202</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB202</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>QUATB202</text>
+    <x>10</x>
+    <y>50</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB202_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB202 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB202</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>50</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB202_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB202 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB202</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>50</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- QUATB203 -->
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB203</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB203</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB203</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>QUATB203</text>
+    <x>10</x>
+    <y>90</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB203_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB203 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB203</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>90</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB203_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB203 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB203</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>90</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- QUATB204 -->
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB204</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB204</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB204</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>QUATB204</text>
+    <x>10</x>
+    <y>130</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB204_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB204 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB204</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>130</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB204_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB204 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB204</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>130</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- QUATB205 -->
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB205</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB205</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB205</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>QUATB205</text>
+    <x>10</x>
+    <y>170</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB205_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB205 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB205</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>170</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB205_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB205 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB205</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>170</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- QUATB206 -->
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB206</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB206</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB206</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>QUATB206</text>
+    <x>10</x>
+    <y>210</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB206_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB206 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB206</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>210</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>QUATB206_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>QUATB206 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>QUATB206</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>210</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- DHPTB102 -->
+  <widget type="action_button" version="3.0.0">
+    <name>DHPTB102</name>
+    <actions>
+      <action type="open_display">
+        <description>DHPTB102</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHPTB102</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DHPTB102</text>
+    <x>10</x>
+    <y>270</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHPTB102_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHPTB102 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHPTB102</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>270</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHPTB102_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHPTB102 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHPTB102</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>270</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- DHSTB201 -->
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB201</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB201</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB201</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DHSTB201</text>
+    <x>10</x>
+    <y>310</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB201_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB201 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB201</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>310</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB201_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB201 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB201</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>310</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- DHSTB202 -->
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB202</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB202</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB202</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DHSTB202</text>
+    <x>10</x>
+    <y>350</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB202_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB202 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB202</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>350</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB202_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB202 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB202</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>350</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
+  <!-- DHSTB203 -->
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB203</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB203</description>
+        <file>eei_ps.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB203</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DHSTB203</text>
+    <x>10</x>
+    <y>390</y>
+    <width>120</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB203_DEBUG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB203 DEBUG</description>
+        <file>eei_ps_debug.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB203</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>DEBUG</text>
+    <x>140</x>
+    <y>390</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DHSTB203_UNIMAG</name>
+    <actions>
+      <action type="open_display">
+        <description>DHSTB203 UNIMAG</description>
+        <file>eei_ps_unimag.bob</file>
+        <macros>
+          <P>BTF:MAG:EEI</P>
+          <R>DHSTB203</R>
+        </macros>
+        <target>window</target>
+      </action>
+    </actions>
+    <text>UNIMAG</text>
+    <x>230</x>
+    <y>390</y>
+    <width>80</width>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+
 </display>

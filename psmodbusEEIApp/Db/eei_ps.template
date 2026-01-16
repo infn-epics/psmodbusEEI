@@ -10,6 +10,7 @@ record(bo, "$(P):CMD_STANDBY")
     field(DESC, "Standby Command")
     field(ZNAM, "Off")
     field(ONAM, "Standby")
+    field(HIGH, "0.5")
 }
 
 record(bo, "$(P):CMD_POWER_ON")
@@ -19,6 +20,7 @@ record(bo, "$(P):CMD_POWER_ON")
     field(DESC, "Power On Command")
     field(ZNAM, "Off")
     field(ONAM, "Power On")
+    field(HIGH, "0.5")
 }
 
 record(bo, "$(P):CMD_GLOBAL_OFF")
@@ -28,6 +30,7 @@ record(bo, "$(P):CMD_GLOBAL_OFF")
     field(DESC, "Global Off Command")
     field(ZNAM, "Off")
     field(ONAM, "Global Off")
+    field(HIGH, "0.5")
 }
 
 record(bo, "$(P):CMD_RESET")
@@ -37,6 +40,7 @@ record(bo, "$(P):CMD_RESET")
     field(DESC, "Reset Command")
     field(ZNAM, "Off")
     field(ONAM, "Reset")
+    field(HIGH, "0.5")
 }
 
 record(bo, "$(P):CMD_START_RAMP")
@@ -46,6 +50,7 @@ record(bo, "$(P):CMD_START_RAMP")
     field(DESC, "Start Ramp/Trigger Command")
     field(ZNAM, "Off")
     field(ONAM, "Start Ramp")
+    field(HIGH, "0.5")
 }
 
 record(bo, "$(P):CMD_CURRENT_MODE_TRIG")
@@ -137,19 +142,22 @@ record(seq, "$(P):POLARITY_SEQ_NEG")
 }
 
 # Direct polarity commands (used by sequencer)
-record(ao, "$(P):CMD_POLARITY_POS_EXEC")
+record(bo, "$(P):CMD_POLARITY_POS_EXEC")
 {
-    field(DTYP, "asynInt32")
-    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 1 0x1 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "Set Polarity Positive")
+    field(ZNAM, "Off")
+    field(ONAM, "Positive")
 }
 
-record(ao, "$(P):CMD_POLARITY_NEG_EXEC")
+record(bo, "$(P):CMD_POLARITY_NEG_EXEC")
 {
-    field(DTYP, "asynInt32")
-    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DTYP, "asynUInt32Digital")
+    field(OUT,  "@asynMask($(PORT_WR) 1 0x2 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "Set Polarity Negative")
-  
+    field(ZNAM, "Off")
+    field(ONAM, "Negative")
 }
 
 # Raw access to Command Word #2
@@ -162,11 +170,12 @@ record(ao, "$(P):POLARITY_CTRL")
 
 
 ################### Current Reference (Register 40003 / 0x02) - Write ####################
-record(ao, "$(P):CURRENT_SP")
+# Raw Modbus current setpoint (unsigned, used internally by state machine)
+record(ao, "$(P):CURR_SP_RAW")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT_WR) 2 $(TIMEOUT=1000))MODBUS_DATA")
-    field(DESC, "Current Setpoint")
+    field(DESC, "Current SP Raw (unsigned)")
     field(EGU,  "A")
     field(PREC, "3")
     field(ASLO, "0.001")
@@ -196,10 +205,12 @@ record(ao, "$(P):RAMP_RATE_SET")
     field(DESC, "Ramp Rate Setpoint")
     field(EGU,  "A/s")
     field(PREC, "0")
-    field(DRVH, "3474")
-    field(DRVL, "10")
-    field(HOPR, "3474")
-    field(LOPR, "10")
+    field(DRVH, "$(RAMP_MAX=3474)")
+    field(DRVL, "$(RAMP_MIN=10)")
+    field(HOPR, "$(RAMP_MAX=3474)")
+    field(LOPR, "$(RAMP_MIN=10)")
+    field(VAL,  "$(RAMP_DEFAULT=100)")
+    field(PINI, "YES")
 }
 
 ################### Cycle Pattern (Registers 40006-40007 / 0x05-0x06) - Write ####################
@@ -1262,4 +1273,176 @@ record(ai, "$(P):DEBUG_REG44")
     field(INP,  "@asyn($(PORT) 44 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "Register 44 (ACDC2 Curr)")
     field(SCAN, "I/O Intr")
+}
+
+################### UNIMAG Interface ####################
+# Simplified current control with automatic polarity and sequencing
+# Logic implemented in unimagEEIControl.st (SNL state program)
+
+# ==================== State Machine Status ====================
+# State machine internal state (matches OCEM UNIMAG implementation)
+record(longin, "$(P):SM_STATE_RB")
+{
+    field(DESC, "State Machine State")
+    field(EGU,  "")
+}
+
+# State machine busy flag
+record(bo, "$(P):SM_BUSY_RB") 
+{
+    field(DESC, "State Machine Busy")
+    field(ZNAM, "READY")
+    field(ONAM, "BUSY")
+}
+
+# State machine status message
+record(stringin, "$(P):SM_STATUS_MSG")
+{
+    field(DESC, "State Machine Status")
+    field(VAL,  "Initializing")
+}
+
+# Debug level control (0=ERROR, 1=INFO, 2=DETAIL, 3=TRACE)
+record(longout, "$(P):DEBUG_LEVEL")
+{
+    field(DESC, "Debug Logging Level")
+    field(EGU,  "")
+    field(DRVH, "3")
+    field(DRVL, "0")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+
+# ==================== UNIMAG Current Setpoint ====================
+# User sets current in A (positive or negative) 
+# Monitored by SNL program for automatic sequencing
+record(ao, "$(P):CURRENT_SP")
+{
+    field(DESC, "Current Setpoint (signed)")
+    field(EGU,  "A")
+    field(PREC, "3")
+    field(DRVH, "$(MAX_CURR=330)")
+    field(DRVL, "$(MIN_CURR=-330)")
+    field(HOPR, "$(MAX_CURR=330)")
+    field(LOPR, "$(MIN_CURR=-330)")
+}
+
+# ==================== Signed Current Readback ====================
+# Applies polarity sign to raw current readback
+record(calcout, "$(P):CURRENT_SIGNED_RB")
+{
+    field(DESC, "Current Readback (signed)")
+    field(INPA, "$(P):CURRENT_RB CP")
+    field(INPB, "$(P):STAT_POLARITY_POS CP")
+    field(INPC, "$(P):STAT_POLARITY_NEG CP")
+    field(CALC, "B?A:(C?-A:A)")
+    field(EGU,  "A")
+    field(PREC, "3")
+}
+
+# ==================== Status Readback (OCEM Compatible) ====================
+# Simple state decode from hardware status bits
+# States: 0=OFF, 1=STANDBY, 2=ON, 7=FAULT
+# Priority: FAULT > ON > STANDBY > OFF (mutually exclusive states)
+record(calcout, "$(P):STATUS_DECODE")
+{
+    field(DESC, "PS State Decode")
+    field(INPA, "$(P):STAT_STANDBY CP")
+    field(INPB, "$(P):STAT_POWER_ON CP")
+    field(INPC, "$(P):STAT_FAULTY CP")
+    # Simple: FAULT(7) > ON(2) > STANDBY(1) > OFF(0)
+    field(CALC, "C?7:(B?2:(A?1:0))")
+    field(OUT,  "$(P):STATUS_RB PP")
+}
+
+record(mbbi, "$(P):STATUS_RB")
+{
+    field(DESC, "Power Supply Status")
+    field(INP,  "$(P):STATUS_DECODE NPP MS")
+    field(ZRST, "OFF")
+    field(ONST, "STANDBY")
+    field(TWST, "ON")
+    field(THST, "NOT_REACHED")
+    field(FRST, "RAMPING")
+    field(FVST, "STBY_TIMEOUT")
+    field(SXST, "SET_TIMEOUT")
+    field(SVST, "FAULT")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(FRVL, "4")
+    field(FVVL, "5")
+    field(SXVL, "6")
+    field(SVVL, "7")
+    field(ZRSV, "NO_ALARM")
+    field(ONSV, "NO_ALARM")
+    field(TWSV, "NO_ALARM")
+    field(THSV, "MINOR")
+    field(FRSV, "MINOR")
+    field(FVSV, "MAJOR")
+    field(SXSV, "MAJOR")
+    field(SVSV, "MAJOR")
+}
+
+# Legacy STATE_RB - direct passthrough from STATUS_RB
+record(mbbi, "$(P):STATE_RB")
+{
+    field(DESC, "Power Supply State")
+    field(INP,  "$(P):STATUS_RB CP MS")
+    field(ZRST, "OFF")
+    field(ONST, "STANDBY")
+    field(TWST, "ON")
+    field(THST, "FAULT")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "7")
+    field(ZRSV, "NO_ALARM")
+    field(ONSV, "NO_ALARM")
+    field(TWSV, "NO_ALARM")
+    field(THSV, "MAJOR")
+}
+
+# ==================== State Control ====================
+# Allows user to command state changes: STANDBY, ON, RESET, OFF
+record(mbbo, "$(P):STATE_SP")
+{
+    field(DESC, "Set Power Supply State")
+    field(ZRST, "OFF")
+    field(ONST, "ON")
+    field(TWST, "STANDBY")
+    field(THST, "RESET")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(FLNK, "$(P):STATE_PROCESS")
+}
+
+record(seq, "$(P):STATE_PROCESS")
+{
+    field(DESC, "Process State Command")
+    field(SELM, "Specified")
+    field(SELL, "$(P):STATE_SP NPP MS")
+    # OFF (0) -> STANDBY command
+    field(DOL0, "1")
+    field(LNK0, "$(P):CMD_STANDBY PP")
+    # ON (1) -> POWER_ON command  
+    field(DOL1, "1")
+    field(LNK1, "$(P):CMD_POWER_ON PP")
+    # STANDBY (2) -> STANDBY command
+    field(DOL2, "1")
+    field(LNK2, "$(P):CMD_STANDBY PP")
+    # RESET (3) -> RESET command
+    field(DOL3, "1")
+    field(LNK3, "$(P):CMD_RESET PP")
+}
+
+# Interlock status
+record(calc, "$(P):INTERLOCKED")
+{
+    field(DESC, "Interlock Active")
+    field(INPA, "$(P):STAT_FAULTY CP")
+    field(CALC, "A")
 }
