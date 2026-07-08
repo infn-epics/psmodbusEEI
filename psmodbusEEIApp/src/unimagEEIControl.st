@@ -20,7 +20,7 @@ assign current_rb to "{P}:CURRENT_RB";
 monitor current_rb;
 
 double curr_set;
-assign curr_set to "{P}:CURRENT_SP";
+assign curr_set to "{P}:CURR_SET_RAW";
 
 int stat_polarity_pos;
 assign stat_polarity_pos to "{P}:STAT_POLARITY_POS";
@@ -207,7 +207,10 @@ ss unimag_control {
         }
         
         when (delay(1.0)) {
-            /* Change polarity after delay */
+            /* Change polarity after delay. This register is a mutually-
+             * exclusive selector (OPEN/POS/NEG), so a plain write of 1 or 2
+             * replaces the whole register, clearing OPEN and the other
+             * polarity bit in one atomic Modbus write. */
             if (requested_polarity == POL_POSITIVE) {
                 cmd_polarity_pos_exec = 1;
                 pvPut(cmd_polarity_pos_exec);

@@ -9,7 +9,7 @@ psmodbusEEI_registerRecordDeviceDriver(pdbbase)
 # Configure IP port (adjust IP address and port as needed)
 # drvAsynIPPortConfigure("EEI_IP", "192.168.190.153:502", 0, 0, 0)
 
-drvAsynIPPortConfigure("EEI_IP", "192.168.190.156:502", 0, 0, 0)
+drvAsynIPPortConfigure("EEI_IP", "192.168.190.151:502", 0, 0, 0)
 
 # Enable Modbus interpose interface
 modbusInterposeConfig("EEI_IP", 0, 0, 0)

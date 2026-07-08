@@ -136,20 +136,21 @@ record(seq, "$(P):POLARITY_SEQ_NEG")
     field(DLY2, "1.0")
 }
 
-# Direct polarity commands (used by sequencer)
+# Direct polarity commands (used by sequencer). This register is a
+# mutually-exclusive selector (OPEN / POS / NEG) per the Modbus map, so these
+# write the whole register (not a bit mask) to guarantee only one is active.
 record(ao, "$(P):CMD_POLARITY_POS_EXEC")
 {
     field(DTYP, "asynInt32")
-    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(OUT,  "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "Set Polarity Positive")
 }
 
 record(ao, "$(P):CMD_POLARITY_NEG_EXEC")
 {
     field(DTYP, "asynInt32")
-    field(OUT, "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
+    field(OUT,  "@asyn($(PORT_WR) 1 $(TIMEOUT=1000))MODBUS_DATA")
     field(DESC, "Set Polarity Negative")
-  
 }
 
 # Raw access to Command Word #2
@@ -162,11 +163,14 @@ record(ao, "$(P):POLARITY_CTRL")
 
 
 ################### Current Reference (Register 40003 / 0x02) - Write ####################
-record(ao, "$(P):CURRENT_SP")
+# Raw hardware magnitude register (unsigned). Not for direct operator use -
+# the signed, operator-facing setpoint is $(P):CURRENT_SP in eei_ps_unimag.template,
+# which the SNL program (unimagEEIControl.st) translates into polarity + this magnitude.
+record(ao, "$(P):CURR_SET_RAW")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT_WR) 2 $(TIMEOUT=1000))MODBUS_DATA")
-    field(DESC, "Current Setpoint")
+    field(DESC, "Current Setpoint (raw magnitude)")
     field(EGU,  "A")
     field(PREC, "3")
     field(ASLO, "0.001")
