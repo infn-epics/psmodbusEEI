@@ -20,6 +20,53 @@ record(ao, "$(P):CURRENT_SP")
     field(LOPR, "$(MIN_CURR=-330)")
 }
 
+# EEI units can run in "Software" mode (register writes take effect
+# immediately) or "Triggered" mode (a pending write - including a polarity
+# change - only applies once CMD_START_RAMP is pulsed). Toggle live at
+# runtime (no IOC restart) via caput - unimagEEIControl.st monitors this and
+# adjusts its sequencing accordingly. Default is Software mode (matches how
+# most EEI units behave); override the boot default with SW_MODE=0 on the
+# dbLoadRecords macro line for units that need to start in Triggered mode.
+record(bo, "$(P):MODE_SW_ENABLE")
+{
+    field(DESC, "Enable Software Mode (vs Triggered)")
+    field(ZNAM, "Triggered")
+    field(ONAM, "Software")
+    field(PINI, "YES")
+    field(VAL,  "$(SW_MODE=1)")
+    field(FLNK, "$(P):MODE_APPLY")
+}
+
+# Applies the selected mode to the hardware mode-select bits
+record(seq, "$(P):MODE_APPLY")
+{
+    field(DESC, "Apply Mode Selection to Hardware")
+    field(SELM, "Specified")
+    field(SELL, "$(P):MODE_SW_ENABLE NPP MS")
+    field(DOL0, "1")
+    field(LNK0, "$(P):CMD_CURRENT_MODE_TRIG PP")
+    field(DOL1, "1")
+    field(LNK1, "$(P):CMD_CURRENT_MODE_SW PP")
+}
+
+# Per the EEI regulator firmware docs, two different converter topologies
+# exist in this family: quadrupole/normal-dipole regulators switch polarity
+# with physical contactors (CMD_POLARITY_POS/NEG_EXEC + CMD_CONTACTORS_OPEN,
+# confirmed via STAT_POLARITY_POS/NEG), while the pulsed-dipole H-bridge
+# regulator has no such contactors - it reverses current electronically via
+# a sign bit on the current reference (CURRENT_SP_SIGN) committed by the
+# same START_RAMP/TRIGGER bit. STAT_POLARITY_POS/NEG reflect the (absent)
+# contactor and can't be used to confirm polarity on this topology.
+# Set POLARITY_VIA_SIGN=1 on the dbLoadRecords macro line for pulsed-dipole
+# units (e.g. DHPTB102); default 0 (contactor-based) for everything else.
+record(bo, "$(P):CFG_POLARITY_VIA_SIGN")
+{
+    field(DESC, "Polarity via sign bit, not contactors")
+    field(ZNAM, "Contactors")
+    field(ONAM, "Sign Bit")
+    field(VAL,  "$(POLARITY_VIA_SIGN=0)")
+}
+
 # ################### Status Readback ####################
 # # Current readback (signed based on polarity)
 # # PV format: $(P):CURRENT_RB

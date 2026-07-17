@@ -1,0 +1,1679 @@
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 1 di Pag. 29
+
+
+
+OGGETTO:INFN Convertitire AC/DC R16R Rev 1
+
+
+
+      AZIONE                             ENTE                          DATA                           NOMINATIVO                                                 FIRMA
+
+     Redazione                     Uff.software                       05/12/18                        M.PETROVIC
+
+       Verifica
+
+  Approvazione
+
+
+
+
+                                                                           LISTA DI DISTRIBUZIONE
+             ENTE                                                         NOMINATIVO / NOMINATIVI                                                                           COPIE
+
+
+
+
+                                                       REGISTRAZIONE DELLO STATO DI REVISIONE
+ REV.                       MOTIVO DELLA MODIFICA                                                      ESEGUITA                    APPROVATA                                DATA
+
+
+
+
+1 DOCUMENTI APPLICABILI
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 2 di Pag. 29
+
+NAN95000                      Ciclo di sviluppo del Software
+
+
+2 DESCRIZIONE GENERALE
+
+L’ unità di regolazione Chopper usa la scheda R16R Rev1 con scheda AMF03 per il colloquio SPI-B+
+scheda driver R523. Nella posizione U30 viene programmato DSP TMS320F28035 con applicazione
+9nd03860 e la MAC LC4064 pos U22 con applicazione MAC 9nm07320. L’unita regola la tensione in
+uscita (feedback da SPI-A) ed e sudivisa in circuito risonante e 2 StepDown .Ciclo di esecuzione e la
+PWM è impostabile da 40-55 kHz. I due step-down vengono pilotati con commandi U e V. Risonante con
+commando W. La tensione di rete raddrizzata viene letta da SPI-B. A valle di rete radrizzata ci sono 2
+step-down e a valle di essi c'e' circuito risonante.
+
+
+
+
+DESCRIZIONE DELL’HARDWARE
+
+
+       Nome I/O
+                                        Descrizione
+             ZM                         Sblocco di potenza.
+             Z0                         L’ingresso digitale. Sblocco marcia da Locale
+             Z1                         L’ingresso digitale. Sblocco marcia in Remoto
+             Z2                         L’ingresso digitale. Selezione funzionamento in locale
+             Z3                         L’ingresso digitale. Reset allarmi
+             E0                         Ingresso analogico. Feedback di corrente da LEM in +/- 12 bit. Usato per
+                                        allarme di sovracorrente in uscita e gancio di corrente in uscita
+       E2-E3                            Ingresso analogico. +/- 10 Volt. Non usato. Feedback di controllo è da SPI-A
+        E4                              Ingresso analogico. +/- 10 Volt Non usato.
+        E5                              Ingresso analogico. +/- 10 Volt Non usato.
+   J12.CAH_CAL                          L’ingresso differenziale del sincronismo rete. Non usato
+   J12.CBH_CBL                          L’ingresso differenziale del senso ciclico del sincronismo rete. Non usato
+   J12.VMP_VMN                          L’ingresso differenziale del tensione di rete. I segnali su J12 potrebbero
+                                        arrivare da DA04.
+   J15.DOH_DOL                          L’ingresso differenziale encoder CHA 0-5 Volt - non usato
+   J15.CKH_CKL                          L’ingresso differenziale encoder CHB 0-5 Volt - non usato
+        KE                              L’uscita digitale. Consenso di marcia
+        KF                              L’uscita digitale. Convertitore in marcia
+        U6                              Uscita analogica. Uscita analogica generica.
+        U7                              Uscita analogica. Corrispondente al ingresso E0
+      Conn.IU                           Ingresso analogico. +/- 1 Volt. Corrente IU dei 2 step-down .Precisione +/- 11
+                                        bit
+        Conn.IV                         Ingresso analogico. +/- 1 Volt Corrente IV.non usato
+        Conn.IW                         Ingresso analogico. +/- 1 Volt Corrente IW circuito risonante. Per
+                                        visuallizzare
+      Conn.AUX                          Ingresso analogico. +/- 1 Volt. Precisione +/- 11 bit Riferimento tensione in
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 3 di Pag. 29
+
+                                        uscita da locale
+       Conn.VB                          Ingresso analogico. 5 Volt Tensione Ingresso. Tensione al monte di
+                                        risonante, a valle del step-down.Precisione 12 bit
+      Conn.TMP                          Ingresso analogico. 5 Volt gancio analogico sul corrente d'uscita in locale
+
+
+
+DESCRIZIONE DEL SOFTWARE
+
+Descrizione della Seriale RS485
+  4.1.1 Dati di SET/SETUP
+
+                              PASSWORD – ABILITAZIONE DI SCRITTURA IN MODBUS
+
+        Serve per proteggere le variabili dalla scrittura dalla rete Modbus. Le variabili
+        protette dalla scrittura sono definite nella applicazione.
+
+
+         VALORE MINIMO     00 [n]
+         VALORE MASSIMO 65535 [n]
+
+                  NOME INTERNO                          Password CODICE VARIABILE                                       1
+
+
+                                         TENSIONE NOMINALE PONTE RADRIZZATORE
+         VALORE MINIMO                                     0 [V]
+         VALORE MASSIMO                                 1000 [V]
+
+                  NOME INTERNO                          BridgeNom CODICE VARIABILE                                      2
+
+
+                                         K FILTRO TENSIONE INTERMEDIA
+
+                   Tra Step-down e filtro risonante
+         VALORE MINIMO                                  0.0001 [n]
+         VALORE MASSIMO                                 0.1000 [n]
+
+                  NOME INTERNO                          KFiltVB CODICE VARIABILE                                    3
+
+
+                                         K FILTRO CORRENTE TENSIONE RETE RADRIZZATA
+         VALORE MINIMO                                 0.10 [%]
+         VALORE MASSIMO                              100.00 [%]
+
+                  NOME INTERNO                          KFiltU CODICE VARIABILE                                  4
+
+
+                                         Flag
+
+     Bit 0 non usato
+     Bit 1 DisCompAux– disabilita compensazione PWM e feedforward del step-down in
+funzione di tensione radrizzata
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 4 di Pag. 29
+
+     Bit 2 SW_CFG_REM_LOC– switch di confronto con Z2 della configurazione Remoto/Loc
+     Bit 3 EnSetTensDinamico – Set di tensione da Energia
+     Bit 4 EnRipartCarico – ripartizione di carico in Can
+     Bit 5 MasterNode – master della ripartizione di carico
+     Bit 6 DisTensRampLoc – disabilito la rampa in locale dopo start-up
+     Bit 7 EnFiltVOut – abilito il filtraggio della tensione in uscita con media di 4
+campioni
+
+         VALORE MINIMO                          000 [n]
+         VALORE MASSIMO                       32767 [n]
+
+
+                  NOME INTERNO                          Flag          CODICE VARIABILE                          5
+
+
+                              OFFSET INGRESSO ANALOGICO IU (ANA3)
+
+        L’Offset viene espresso in % di fondo scala (-1,1) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetIU CODICE VARIABILE                                       6
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO IU (ANA3)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 % che serve a
+riportare il segnale IU [-1,1] volt range del segnale al ANA3 (1.65 +/- 1.25)
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjIU CODICE VARIABILE                                     7
+
+
+                              OFFSET INGRESSO ANALOGICO IV (ANB3)
+
+        L’0ffset viene espresso in % di fondo scala (-1,1) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetIV               CODICE VARIABILE                             8
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO IV (ANB3)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 %
+ che serve a riportare il segnale IV [-1,1] volt range del segnale al ANB3
+(1.65 +/- 1.25)
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 5 di Pag. 29
+
+                  NOME INTERNO                          KAdjIV CODICE VARIABILE                                    9
+
+
+
+                              OFFSET INGRESSO ANALOGICO IW (ANA4)
+
+        L’0ffset viene espresso in % di fondo scala (-1,1) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetIW               CODICE VARIABILE                           10
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO IW (ANA4)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 %che serve a
+riportare il segnale IW [-1,1] volt range del segnale al ANA4 (1.65 +/- 1.25)
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjIW CODICE VARIABILE                                    11
+
+
+                              OFFSET INGRESSO ANALOGICO AUX (ANA6-ANB6)
+
+        L’0ffset viene espresso in % di fondo scala (-1,1) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetAUX CODICE VARIABILE                                        12
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO AUX (ANA6-ANB6)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere -100.00 %che serve a
+riportare il segnale AUX [-1,1] volt range del segnale al ANA6-ANB6 (1.65 +/- 1.25)
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjAUX CODICE VARIABILE                                       13
+
+
+                              OFFSET INGRESSO ANALOGICO TMP (ANB4)
+
+        L’0ffset viene espresso in % di fondo scala (-5,5) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetTMP CODICE VARIABILE                                        14
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 6 di Pag. 29
+
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO TMP (ANB4)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 %che serve a
+riportare il segnale TMP [-5,5] volt range del segnale al ANB4 (1.65 +/- 1.25)
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjTMP CODICE VARIABILE                                     15
+
+
+                              OFFSET INGRESSO ANALOGICO VB (ANA5-ANB5)
+
+        L’0ffset viene espresso in % di fondo scala (-5,5) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetVB CODICE VARIABILE                                      16
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO VB (ANA5-ANB5)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 %che serve a
+riportare il segnale VB [-5,5] volt range del segnale al ANA5-ANB5 (1.65 +/- 1.25)
+
+         VALORE MINIMO -200.00 [%]
+         VALORE MASSIMO 200.00 [%]
+
+                  NOME INTERNO                          KAdjVB CODICE VARIABILE                                    17
+
+
+
+                              OFFSET INGRESSO ANALOGICO E0(ANA0-ANB0)
+
+        L’0ffset viene espresso in % di fondo scala (-1,1) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetE0E1 CODICE VARIABILE                                         18
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO E0 (ANA0-ANB0)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 %che serve a
+riportare il segnale E0 [-1,1] volt range del segnale al ANA0-ANB0 (1.65 +/- 1.25)
+Non usato da questa applicazione
+
+         VALORE MINIMO -200.00 [%]
+         VALORE MASSIMO 200.00 [%]
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 7 di Pag. 29
+
+
+                  NOME INTERNO                          KAdjE0E1 CODICE VARIABILE                                      19
+
+
+                              OFFSET INGRESSO ANALOGICO E2E3(ANA1)
+
+        L’0ffset viene espresso in % di fondo scala (-10,10) Volt.
+        Viene tarato in modo di otenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetE2E3 CODICE VARIABILE                                         20
+
+
+                              K COMPENSAZIONE INGRESSO ANALOGICO E2E3 (ANA1)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso. Il valore default dovrebbe essere 100.00 %che serve a
+riportare il segnale E2E3 [-10,10] volt range del segnale al (ANA1-ANB1) (1.65 +/-
+1.25)
+
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjE2E3 CODICE VARIABILE                                      21
+
+
+
+                              FONDO SCALA RIFERIMENTO LOCALE
+
+        Specifica quanto vale 100% da Aux
+
+
+         VALORE MINIMO                         10.00 [V]
+         VALORE MASSIMO                       150.00 [V]
+
+                  NOME INTERNO                          RifTensFSLoc CODICE VARIABILE                                          22
+
+
+
+                              CONVERTER OUTPUT CAPACITOR
+
+        Used to calculate energy acumulated in the system.
+
+
+         VALORE MINIMO                          0.2 [mF]
+         VALORE MASSIMO                       600.0 [mF]
+
+                  NOME INTERNO                          CLoad CODICE VARIABILE                                 23
+
+
+
+                              OFFSET INGRESSO E4 (ANA2)
+
+        L’Offset viene espresso in % di fondo scala (-10,10) Volt.
+        Viene tarato in modo di ottenere valore 0 a 0 Volt.
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 8 di Pag. 29
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetE4 CODICE VARIABILE                                      24
+
+
+                              K COMPENSAZIONE INGRESSO E4 (ANA2)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso.
+Viene tarato in modo di ottenere valore 16383 a 10 Volt dell’ingresso
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjE4 CODICE VARIABILE                                    25
+
+
+
+                              OFFSET INGRESSO E5 (ANB2)
+
+        L’0ffset viene espresso in % di fondo scala (-10,10) Volt.
+        Viene tarato in modo di ottenere valore 0 a 0 Volt.
+
+         VALORE MINIMO -50.00 [%]
+         VALORE MASSIMO 50.00 [%]
+
+                  NOME INTERNO                          OffsetE5 CODICE VARIABILE                                      26
+
+
+                              K COMPENSAZIONE INGRESSO E5 (ANB2)
+
+     K compensazione espresso in % serve per tarare il fondo scala al valore massimo
+del segnale in ingresso.
+Viene tarato in modo di ottenere valore 16383 a 10 Volt dell’ingresso
+
+         VALORE MINIMO -150.00 [%]
+         VALORE MASSIMO 150.00 [%]
+
+                  NOME INTERNO                          KAdjE5 CODICE VARIABILE                                    27
+
+
+                   INDICE VARIABILE DA MANDARE AL USCITA ID
+        Indice seleziona Rxx da mandare all punto di test ID
+
+        VALORE MINIMO                                 -1 [n]
+        VALORE MASSIMO                               167 [n]
+
+                  NOME INTERNO                          IndDAC_ID CODICE VARIABILE                                        28
+
+
+                   K ADJUSTAMENTO VARIABILE DA MANDARE AL USCITA ID
+     K di adattamento variabile Rxx da mandare al punto di test ID [-10,10]. 2.5Volt
+corrisponde al valore 0 della variabile
+
+        VALORE MINIMO                             -200.00 [%]
+        VALORE MASSIMO                             200.00 [%]
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                     Pag. 9 di Pag. 29
+
+
+                  NOME INTERNO                          KAdjDAC_ID CODICE VARIABILE                                         29
+
+
+                   L’OFFSET                    USCITA ID
+        L’offset variabile Rxx da mandare al punto di test ID. Il dato da mandare X
+             Y= KAdjDAC_ID*X + OffsDAC_ID
+
+        VALORE MINIMO                             -100.00 [%]
+        VALORE MASSIMO                             100.00 [%]
+
+                  NOME INTERNO                          OffsDAC_ID CODICE VARIABILE                                         30
+
+
+                   INDICE VARIABILE DA MANDARE AL USCITA U6
+        Indice seleziona Rxx da mandare all punto di test U6
+
+        VALORE MINIMO                                 -1 [n]
+        VALORE MASSIMO                               167 [n]
+
+                  NOME INTERNO                          IndDAC_U6 CODICE VARIABILE                                        31
+
+
+                   K ADJUSTAMENTO VARIABILE DA MANDARE AL USCITA U6
+     K di adattamento variabile Rxx da mandare al punto di test U6 [-10,10]. 2.5Volt
+corrisponde al valore 0 della variabile
+
+        VALORE MINIMO                             -200.00 [%]
+        VALORE MASSIMO                             200.00 [%]
+
+                  NOME INTERNO                          KAdjDAC_U6 CODICE VARIABILE                                         32
+
+
+
+                   L’OFFSET                    USCITA U6
+                   L’offset variabile Rxx da mandare al punto di test U6. Il dato da mandare X
+                   Y= KAdjDAC_U6*X + OffsDAC_U6
+
+
+        VALORE MINIMO                             -100.00 [%]
+        VALORE MASSIMO                             100.00 [%]
+
+                  NOME INTERNO                          OffsDAC_U6 CODICE VARIABILE                                         33
+
+
+
+                   FONDO SCALA CORRENTE di gamba U e V
+                   Circuito Buck
+         VALORE MINIMO                          10.0 [A]
+         VALORE MASSIMO                       1000.0 [A]
+
+                  NOME INTERNO                          ImaxU CODICE VARIABILE                                 34
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 10 di Pag. 29
+
+                              FONDO SCALA TENSIONE DI DCLINK
+
+        Fondo scala uscita buck ingresso risonante
+
+         VALORE MINIMO                           0 [V]
+         VALORE MASSIMO                       1250 [V]
+
+                  NOME INTERNO                          BarraFS CODICE VARIABILE                                     35
+
+
+                              TENSIONE FINE PRECARICA DA RETE
+
+        Se commando di marcia presente al superamento di questa soglia e con SCR_ON da
+        MAC convertitore AC/DC va in marcia.
+
+         VALORE MINIMO                                0 [V]
+         VALORE MASSIMO                            1000 [V]
+
+                  NOME INTERNO                          TensFinePrecGrid CODICE VARIABILE                                              36
+
+
+                              TEMPO RAMPA DI CIRCUITO RISONANTE
+
+        In Partenza viene fatta la rampa di modulazione PWM su circuito risonante prima
+        di partire con buck.
+
+         VALORE MINIMO                              0.00 [s]
+         VALORE MASSIMO                            10.00 [s]
+
+                  NOME INTERNO                          TimeRampaRis CODICE VARIABILE                                         37
+
+
+                              SOGLIA RELATIVA DI PREALLARME TENSIONE
+                                  USCITA BUCK MASSIMA
+                   La soglia assoluta viene calcolata in funzione di tensione
+                   in uscita del chopper AC/DC
+
+         VALORE MINIMO                                    0 [V]
+         VALORE MASSIMO                                 100 [V]
+
+                  NOME INTERNO                          PreAllVOutBuckMax CODICE VARIABILE                                               38
+
+
+                              SOGLIA D’ALLARME TENSIONE
+                                  USCITA BUCK MINIMA
+         VALORE MINIMO                         00 [V]
+         VALORE MASSIMO                       2000 [V]
+
+                  NOME INTERNO                          VOutBuckMin CODICE VARIABILE                                        39
+
+
+                              RITARDO D’ALLARME TENSIONE BUCK MINIMA
+         VALORE MINIMO                        0.001 [s]
+         VALORE MASSIMO                       2.000 [s]
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 11 di Pag. 29
+
+
+                  NOME INTERNO                          RitBuckMin CODICE VARIABILE                                       40
+
+
+                   SOGLIA D’ALLARME TENSIONE BUCK MASSIMA
+
+         VALORE MINIMO                          00 [V]
+         VALORE MASSIMO                       1000 [V]
+
+                  NOME INTERNO                          VOutBuckMax CODICE VARIABILE                                        41
+
+
+                   RITARDO D’ALLARME TENSIONE BUCK MASSIMA
+                   In iterazioni di 80 us
+
+         VALORE MINIMO                         1 [n]
+         VALORE MASSIMO                       99 [n]
+
+                  NOME INTERNO                          RitVOutBuckMax CODICE VARIABILE                                            42
+
+
+
+
+                   GUADAGNO PROPORZIONALE ANELLO DI GANCIO DI CORRENTE
+                   Limita la corrente in uscita del convertitore AC/DC al valore proveniente
+                   da Can oppure ingresso TMP in locale.
+
+         VALORE MINIMO                              0.00 [n]
+         VALORE MASSIMO                            10.00 [n]
+
+                  NOME INTERNO                          KpGancioE0 CODICE VARIABILE                                       43
+
+
+                   GUADAGNO INTEGRALE ANELLO DI GANCIO DI CORRENTE
+                   Limita la corrente in uscita del convertitore AC/DC
+
+         VALORE MINIMO                             0.00 [n]
+         VALORE MASSIMO                          100.00 [n]
+
+                  NOME INTERNO                          KiGancioE0 CODICE VARIABILE                                       43
+
+
+                              CORRENTE NOMINALE
+
+        Corrente in uscita convertitore(E0) di protezione termica. Soglia di protezione
+        di tipo integrale viene calcolata come 1.25*Inom^2*Termica. Dunque protezione
+        interviene in tempo Termica quando corrente è uguale a 1.5 Inom.
+
+         VALORE MINIMO                           5.0 [A]
+         VALORE MASSIMO                       1000.0 [A]
+
+                  NOME INTERNO                          Inom CODICE VARIABILE                                 45
+
+
+                                         TERMICA
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 12 di Pag. 29
+
+
+     Tempo di intervento di protezione termica inverter/motore. L’allarme interviene
+se la corrente di 1.5*Inom dura per Termica secondi.
+
+         VALORE MINIMO                               1 [s]
+         VALORE MASSIMO                            999 [s]
+
+                  NOME INTERNO                          Termica              CODICE VARIABILE                          46
+
+
+                              SOGLIA TEMPERATURA ACQUA ALTA
+
+
+         VALORE MINIMO                             30.0 [°]
+         VALORE MASSIMO                            70.0 [°]
+
+                  NOME INTERNO                          TMaxAcqua CODICE VARIABILE                                      47
+
+
+                                                  DEAD-TIME
+        Tempo morto parte Step-Down per determinare % di modulazione minima
+        per corrente IU.
+
+         VALORE MINIMO                              0.1 [us]
+         VALORE MASSIMO                            10.0 [us]
+
+                  NOME INTERNO                          DeadTime CODICE VARIABILE                                     48
+
+
+                      SOGLIA ALLARME TENSIONE RADRIZZATA MINIMA
+
+         VALORE MINIMO                              0 [V]
+         VALORE MASSIMO                          1000 [V]
+
+                  NOME INTERNO                          AllTensBridgeLow CODICE VARIABILE                                              49
+
+
+                      SOGLIA ALLARME TENSIONE RADRIZZATA MASSIMA
+
+         VALORE MINIMO                              0 [V]
+         VALORE MASSIMO                          1000 [V]
+
+                  NOME INTERNO                          AllTensBridgeHigh CODICE VARIABILE                                               50
+
+
+                      SOGLIA ALLARME CORRENTE IN USCITA ALTA
+                   confronto viene fatto con ingresso E0
+
+         VALORE MINIMO                             0.0 [A]
+         VALORE MASSIMO                          300.0 [A]
+
+                  NOME INTERNO                          SW_Overcurrent CODICE VARIABILE                                            51
+
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 13 di Pag. 29
+
+                      RITARDO ALLARME CORRENTE IN USCITA ALTA
+                   in time tick di 80 us
+
+         VALORE MINIMO                              00 [n]
+         VALORE MASSIMO                            100 [n]
+
+                  NOME INTERNO                          SW_OverCurDel CODICE VARIABILE                                             52
+
+
+                      RAPPORTO TENSIONE TRASFORMATORE RISONANTE
+                   TensBridge/Vout = 2.666
+
+         VALORE MINIMO                               0.100 [n]
+         VALORE MASSIMO                              9.999 [n]
+
+                  NOME INTERNO                          RappTrasfBridgeVOut CODICE VARIABILE                                                  53
+
+
+                              TIME-OUT PRECARICA TENSIONE INTERMEDIA
+
+                   Banda passante del fitro su riferimenti di tensione e
+                   gancio in locale.
+         VALORE MINIMO                          10.0 [Hz]
+         VALORE MASSIMO                       1000.0 [Hz]
+
+                  NOME INTERNO                          LPFreqLocRif CODICE VARIABILE                                         54
+
+                                               DIGIT
+
+        Codice test da visualizzare al display mux
+
+         VALORE MINIMO                                   0 [n]
+         VALORE MASSIMO                                 47 [n]
+
+                  NOME INTERNO                          Digit CODICE VARIABILE                                 55
+
+
+
+                              SOGLIA DI ALLARME SOVRATENSIONE IN USCITA
+
+        Il confronto viene fatto con feedback da SPI-A
+
+         VALORE MINIMO                               0.0 [V]
+         VALORE MASSIMO                            200.0 [V]
+
+                  NOME INTERNO                          VOutOvervoltage CODICE VARIABILE                                             56
+
+                              RITARDO INTERVENTO ALLARME SOVRATENSIONE
+
+        Espresso in time tick di 80 us
+
+         VALORE MINIMO                               0 [n]
+         VALORE MASSIMO                            100 [n]
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 14 di Pag. 29
+
+                  NOME INTERNO                          SW_OverVoltDel CODICE VARIABILE                                            57
+
+                              DEBUG POINTER
+         VALORE MINIMO                              0 [n]
+         VALORE MASSIMO                          4095 [n]
+
+                  NOME INTERNO                          DspPointer CODICE VARIABILE                                         58
+
+
+                              K Filtro CORRENTE IU,IW e E0
+         VALORE MINIMO                             0.0001 [n]
+         VALORE MASSIMO                            1.0000 [n]
+
+                  NOME INTERNO                          KFiltI CODICE VARIABILE                                  59
+
+
+                                                    Secondo indirizzo seriale
+
+             Ogni unita risponde all’indirizzo 30. Per poter condividere stessa rete tra
+        le piu unità slave l’unita bisogna distinguerli mettendo il secondo indirizzo
+        diverso da 30 per poter identificare l’unita in modo univoco.
+
+         VALORE MINIMO                              0 [n]
+         VALORE MASSIMO                            31 [n]
+
+                                        NOME INTERNO                          EEISerAddr CODICE VARIABILE                                         60
+
+
+                                                    MODBUS ADDRESS
+         VALORE MINIMO                               1 [n]
+         VALORE MASSIMO                            127 [n]
+
+                  NOME INTERNO                          ModbusSerAddr CODICE VARIABILE                                             61
+
+
+                                                    MODBUS BAUD RATE
+        0 – 9600
+        1 - 19200
+         VALORE MINIMO                                  0 [n]
+         VALORE MASSIMO                                 1 [n]
+
+                  NOME INTERNO                          ModbusBaudRate CODICE VARIABILE                                               62
+
+
+                                                    MODBUS PARITY
+        0 – No
+        1 - Odd
+        2 – Even
+
+         VALORE MINIMO                                  0 [n]
+         VALORE MASSIMO                                 2 [n]
+
+                  NOME INTERNO                          ModbusParity CODICE VARIABILE                                            63
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 15 di Pag. 29
+
+
+
+
+                                                    MODBUS STOP BITS
+         VALORE MINIMO                                  1 [n]
+         VALORE MASSIMO                                 2 [n]
+
+                  NOME INTERNO                          ModbusStopBit CODICE VARIABILE                                             64
+
+
+
+                              NODE ADDRESS IN CAN OPEN
+
+         VALORE MINIMO                               1 [n]
+         VALORE MASSIMO                            127 [n]
+
+                  NOME INTERNO                          NodeID CODICE VARIABILE                                  65
+
+
+                   CAN BAUD RATE
+
+                   0 – 128 kbits
+                   1 – 256 kbits
+                   2 – 512 kbits
+                   3 – 1 Mbits
+
+         VALORE MINIMO                                  0 [n]
+         VALORE MASSIMO                                 3 [n]
+
+                  NOME INTERNO                          CanBaudRate                   CODICE VARIABILE                           66
+
+
+                              VARIABILE DEBUG PER CAN OPEN
+
+         VALORE MINIMO                                 0 [n]
+         VALORE MASSIMO                            32767 [n]
+
+                  NOME INTERNO                          DebugCOindex CODICE VARIABILE                                         67
+
+
+
+                              VARIABILE DI DEBUG CAN OPEN
+
+         VALORE MINIMO                               0 [n]
+         VALORE MASSIMO                          32767 [n]
+
+                  NOME INTERNO                          DebugCOsub CODICE VARIABILE                                       68
+
+
+                                         CYCLE TIME SLOW PDO
+
+                   Transmissione time of slow PDO.
+
+         VALORE MINIMO                                20 [ms]
+         VALORE MASSIMO                              100 [ms]
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 16 di Pag. 29
+
+                  NOME INTERNO                          SlowMessageCycle CODICE VARIABILE                                              69
+
+
+                                                    FREQUENZA PWM
+                   Frequenza PWM chopper.
+
+         VALORE MINIMO                           40.00 [kHz]
+         VALORE MASSIMO                          55.00 [kHz]
+
+                  NOME INTERNO                          PWMFreq CODICE VARIABILE                                    70
+
+
+
+                              IDENTIFICATORE MESSAGIO DI TRASMISSIONE
+                              PER RIPARTIZIONE DI CARICO
+                   Vengono spedite 2 word a 2 kHz dal chopper Master:
+                   1st int16ClaOutPIVOut; //riferimento di corrente
+                   2nd RefTensOutDopoRampa; //riferimento di tensione
+
+         VALORE MINIMO                          16 [n]
+         VALORE MASSIMO                       2047 [n]
+
+                  NOME INTERNO                          TxLoadShareID CODICE VARIABILE                                           71
+
+
+                   IDENTIFICATORE NODO PLC IN CAN OPEN
+
+                   Il valore viene sommato alla RxPDO di base
+                   Da PLC arrivano 4 word.
+                   1st CmdDaCan
+                         bit 2 RESET_DA_CAN
+                   2nd RefPITensOutDaCanPLC nnn.n [V]
+                   3rd LimE0CorrDaCan nnn.n [A]
+                   4th Libero
+
+         VALORE MINIMO                               1 [n]
+         VALORE MASSIMO                            127 [n]
+
+                  NOME INTERNO                          PLCNodeID CODICE VARIABILE                                      72
+
+
+                   IDENTIFICATORE MESSAGIO DAL CHOPPER DC/DC
+                   1 doppia word lngEnergyRefCan nnnn.nn Ws
+
+         VALORE MINIMO                               16 [n]
+         VALORE MASSIMO                            2047 [n]
+
+                  NOME INTERNO                          DC_DC_NodeID CODICE VARIABILE                                         73
+
+
+                   IDENTIFICATORE MESSAGIO DAL CHOPPER AC/DC
+                       MASTER
+                   Vengono ricevute 2 word a 2 kHz dal chopper Master:
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 17 di Pag. 29
+
+                   1st int16ClaOutPIVOut; //riferimento di corrente
+                   2nd RefTensOutDopoRampa; //riferimento di tensione
+
+
+         VALORE MINIMO                               16 [n]
+         VALORE MASSIMO                            2047 [n]
+
+                  NOME INTERNO                          RxLoadShareID CODICE VARIABILE                                           74
+
+
+                              TENSIONE MINIMA DI SET
+         VALORE MINIMO                          0.0 [V]
+         VALORE MASSIMO                       150.0 [V]
+
+                  NOME INTERNO                          TensSetLimMin CODICE VARIABILE                                           75
+
+
+                              TENSIONE MASSIMA DI SET
+         VALORE MINIMO                         50.0 [V]
+         VALORE MASSIMO                       200.0 [V]
+
+                  NOME INTERNO                          TensSetLimMax CODICE VARIABILE                                           76
+
+
+                              TEMPO RAMPA RIFERIMENTO DI TENSIONE
+        La rampa su riferimento di tensione e di apertura limite PI tensione
+
+        VALORE MINIMO                             0.0 [s]
+        VALORE MASSIMO                           99.0 [s]
+
+                  NOME INTERNO                          TimeRampa CODICE VARIABILE                                      77
+
+
+                              FEEDFORWARD DI TENSIONE
+
+            Determina parte % di modulazione calcolata nel fare la tensione
+        d'uscita voluta partendo dalla tensione raddrizzata.
+         VALORE MINIMO                               0.00 [%]
+         VALORE MASSIMO                            100.00 [%]
+
+                  NOME INTERNO                          Kff CODICE VARIABILE                               78
+
+
+
+
+                              CORRENTE MASSIMA RISONANTE
+         VALORE MINIMO                         10.0 [A]
+         VALORE MASSIMO                       400.0 [A]
+
+                  NOME INTERNO                          ImaxW CODICE VARIABILE                                 79
+
+
+                              VOLTAGE GRADIENT LIMITER
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 18 di Pag. 29
+
+
+        A vale della rampa lenta limita la variazione massima del riferimento. Serve
+        per riferimenti che scavalcano la rampa principale come quello in energia.
+
+         VALORE MINIMO                            0.1 [V/ms]
+         VALORE MASSIMO                          30.0 [V/ms]
+
+                  NOME INTERNO                          MaxGradVolt_MS CODICE VARIABILE                                            80
+
+
+                   GUADAGNO PROPORZIONALE PI DI TENSIONE D'USCITA
+         VALORE MINIMO                         00.00 [n]
+         VALORE MASSIMO                       100.00 [n]
+
+                  NOME INTERNO                          KpTensOut CODICE VARIABILE                                      81
+
+
+                   GUADAGNO INTEGRALE PI DI TENSIONE D'USCITA
+         VALORE MINIMO                              00.00 [%]
+         VALORE MASSIMO                            100.00 [%]
+
+                  NOME INTERNO                          KiTensOut CODICE VARIABILE                                      82
+
+                   GUADAGNO DERIVATIVO PI DI TENSIONE D'USCITA
+        Non usato.
+
+         VALORE MINIMO                              00.00 [%]
+         VALORE MASSIMO                            100.00 [%]
+
+                  NOME INTERNO                          KdTensOut CODICE VARIABILE                                      83
+
+
+                   LIMITE                 DELL’ANELLO PI DI TENSIONE D'USCITA
+         VALORE MINIMO                         00.00 [%]
+         VALORE MASSIMO                       100.00 [%]
+
+                  NOME INTERNO                          LimPITensVOut CODICE VARIABILE                                           84
+
+
+                   FONDO SCALA CORRENTE IN USCITA E0
+         VALORE MINIMO                         00.0 [A]
+         VALORE MASSIMO                       700.0 [A]
+
+                  NOME INTERNO                          CorrE0E1FS CODICE VARIABILE                                        85
+
+
+
+                   GUADAGNO PROPORZIONALE DELL’ANELLO PI DI BUCK
+         VALORE MINIMO                           00.00 [n]
+         VALORE MASSIMO                          20.00 [n]
+
+                  NOME INTERNO                          KpCorrBuck CODICE VARIABILE                                        86
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 19 di Pag. 29
+
+
+                   GUADAGNO INTEGRALE DELL’ANELLO PI DI BUCK
+
+         VALORE MINIMO                           00.00 [n]
+         VALORE MASSIMO                          20.00 [n]
+
+                  NOME INTERNO                          KiCorrBuck CODICE VARIABILE                                       87
+
+
+                   LIMITE PI CORRENTE ISTANTANEA STEP_DOWN
+         VALORE MINIMO                         00.00 [%]
+         VALORE MASSIMO                       100.00 [%]
+
+                      NOME INTERNO                                 LimPICorrBuck                  CODICE VARIABILE                                   88
+
+
+                   MODULAZIONE MINIMA                                       STEP_DOWN
+         VALORE MINIMO                         00.00 [%]
+         VALORE MASSIMO                       100.00 [%]
+
+                      NOME INTERNO                                 AngIVMin             CODICE VARIABILE                                   89
+
+                   MODULAZIONE MASSIMA                                        STEP_DOWN
+         VALORE MINIMO                         00.00 [%]
+         VALORE MASSIMO                       100.00 [%]
+
+                      NOME INTERNO                                 AngIVMax             CODICE VARIABILE                                   90
+
+
+                              RESET DA SERIALE
+
+         VALORE MINIMO                                  0 [n]
+         VALORE MASSIMO                                 1 [n]
+
+                      NOME INTERNO                                 SWResCmd             CODICE VARIABILE                                   91
+
+                   SOGLIA SOVRATEMPERATURA AMBIENTE
+
+         VALORE MINIMO                           30.0 [°]
+         VALORE MASSIMO                          70.0 [°]
+
+                      NOME INTERNO                                 TMaxAmbiente                   CODICE VARIABILE                                   94
+
+
+                   FONDO SCALA LETTURA TENSIONE IN USCITA
+                   Letta da SPI-A
+
+         VALORE MINIMO   100.0 [V]
+         VALORE MASSIMO 1000.0 [V]
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 20 di Pag. 29
+
+
+                      NOME INTERNO                                 TensOutSPIFS                 CODICE VARIABILE                                   96
+
+
+
+
+                   OFFSET                 LETTURA TENSIONE RETE RADDRIZZATA
+                   Letta da SPI-B
+
+         VALORE MINIMO                           -5000 [n]
+         VALORE MASSIMO                           5000 [n]
+
+                      NOME INTERNO                                 OffsetADSPIB                 CODICE VARIABILE                                   98
+
+                   FONDO SCALA LETTURA TENSIONE RETE RADDRIZZATA
+                   Letta da SPI-B
+
+         VALORE MINIMO                         000 [V]
+         VALORE MASSIMO                       1000 [V]
+
+                      NOME INTERNO                                 TensBridgeSPIFS                     CODICE VARIABILE                                   99
+
+
+                   OFFSET                 LETTURA TENSIONE IN USCITA
+                   Letta da SPI-A
+
+         VALORE MINIMO                            -100 [n]
+         VALORE MASSIMO                          29000 [n]
+
+                                             NOME INTERNO                                 OffsetSPIE5              CODICE VARIABILE                                   100
+
+
+                   K ADJUSTAMENTO TENSIONE IN USCITA
+                   Letta da SPI-A
+
+         VALORE MINIMO                         95.00 [%]
+         VALORE MASSIMO                       105.00 [%]
+
+                                             NOME INTERNO                                 KAdjSPIE5             CODICE VARIABILE                                   101
+
+                   GUADAGNO PROPORZIONALE PI DI TENSIONE D'USCITA
+                       A CORRENTI BASSE
+         VALORE MINIMO                         00.00 [n]
+         VALORE MASSIMO                       100.00 [n]
+
+                  NOME INTERNO                          KpTensLowCurr CODICE VARIABILE                                           102
+
+
+                   GUADAGNO INTEGRALE PI DI TENSIONE D'USCITA
+                   A CORRENTI BASSE
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 21 di Pag. 29
+
+
+         VALORE MINIMO                              00.00 [%]
+         VALORE MASSIMO                            100.00 [%]
+
+                  NOME INTERNO                          KiTensLowCurr CODICE VARIABILE                                           103
+
+                   GUADAGNO INTEGRALE PI DI CORRENTE BUCK
+                   A CORRENTI BASSE
+         VALORE MINIMO                              00.00 [%]
+         VALORE MASSIMO                            100.00 [%]
+
+                  NOME INTERNO                          KiBuckLowCurr CODICE VARIABILE                                           104
+
+
+
+                   SOGLIA DI CORRENTE IN USCITA PER CAMBIO GUADAGNI
+         VALORE MINIMO                             00.0 [A]
+         VALORE MASSIMO                          1000.0 [A]
+
+                  NOME INTERNO                          LowCurrThreshold CODICE VARIABILE                                              105
+
+                   GUADAGNO PROPORZIONALE ANELLO DI TENSIONE A MONTE DI
+                       RISONANTE
+
+                   Uscita viene aggiunta al riferimento di corrente buck
+         VALORE MINIMO                           0.000 [n]
+         VALORE MASSIMO                          1.900 [n]
+
+                  NOME INTERNO                          KpHoldVB CODICE VARIABILE                                     106
+
+
+     4.1.2 Commandi brevi
+
+
+
+     4.1.2.1 Breve1
+
+
+            Nome                             Descrizione
+        VOutBuck                             R00 Tensione uscita Buck                                xxx [V]
+       TensBridge                            R01 Tensione ponte a diodi                              xxx [V]
+      GancioCorrE0                           R02 Il valore di gancio/limite di corrente in uscita xxx.x[A]
+           IU_A                              R03 corrente Buck                                      xxx.x[A]
+        CorrE0E1                             R04 Corrente in uscita convertitore AC/DC              xxx.x [A]
+           IW_A                              R05 corrente sezione risonante                         xxx.x [A]
+         RifTens                             R06 il riferimento di tensione in uscita convertitore xxx.x [V]
+      TensVOutSPI                            R07 tensione in uscita convertitore                    xxx.x [V]
+          SetVent                            R08 set di velocità ventilatore input da scheda driver  xx.xx[%]
+         VelVent                             R09 velocità ventilatore input da scheda driver          xx [Hz]
+     uintInputOutput                         R10
+                                             Bit 0 - ZM
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 22 di Pag. 29
+
+                                             Bit 2 – Z0
+                                             Bit 3 – Z1
+                                             Bit 4 – Z2
+                                             Bit 5 – Z3
+                                             Bit 8 - KE
+                                             Bit 9 - KF
+                                             Bit 10 - KC
+                                             Bit 11 - KD
+             Stato                           R11 word degli allarmi
+                                             bit 0 – MP_U
+                                             bit 1 – MP_W
+                                             bit 2 – MPO
+                                             bit 5 – IMAX
+                                             bit 9 – ProtezTermicaE0
+                                             bit 10 – ALL_ERR_CFG_LOC_REM
+                                             bit 12 – SCR_ON_KO
+                                             bit 13 – CAN_RX_KO
+                                             bit 14 – DC_MIN
+                                             bit 15 - DC_MAX
+          StatoExt                           R12 word degli allarmi
+                                             bit 0 – CAN_RX_DCDC_KO
+                                             bit 1 – PROT_TEMP_ACQUA
+                                             bit 2 - PROT_TEMP_AMBIENTE
+                                             bit 3 - CAN_RX_ACDC_KO – unita slave
+                                             bit 4 - CAN_RX_PLC_KO
+                                             bit 6 - COMM_DRV_KO
+                                             bit 7 - TENS_INTERM_LOW
+                                             bit 8 – TENS_INTERM_HIGH
+                                             bit 9 – AllInProg
+                                             bit 10 – ALL_SW_OVERCURR
+                                             bit 11 – ALL_SW_OVERVOLT
+
+       uintPgmMAC   R13 numero della MAC                                                                                                               732
+        uintPgmNo   R14 numero del programma                                                                                                          3860
+       uintFlashCrc R15 crc del programma
+                    R16
+      intRampaIn    R17 Riferimento tensione prima della rampa                                                                                 xxx.xx [%]
+     intRampaOut    R18 Riferimento tensione dopo della rampa                                                                                  xxx.xx [%]
+RefTensOutDopoRampa R19 Riferimento di tensione dopo rampa in                                                                                    xxx.x [V]
+      LocRifTens    R20 Riferimento di tensione in locale da AUX                                                                                xxx.x [V]
+     A11MDato.all   R21 codice mandato al tastierino mux
+      TempAcqua     R22 tempetatura dell'acqua letta da scheda driver                                                                          xxx.x [°]
+    TempAmbiente    R23 tempetatura dell'ambiente letta da scheda driver                                                                       xxx.x [°]
+
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 23 di Pag. 29
+
+
+
+
+     4.1.2.2 Breve2
+
+             Nome                              Descrizione
+      uintNMTCnt                               R24 il contatore messaggio NMT CanOpen
+uintNodeGuardingRxCnt                          R25
+uintNodeGuardingTxCnt                          R26
+     uintSDORxCnt                              R27
+     uintSDOTxCnt                              R28
+    uintPDO1RxCnt                              R29
+    uintPDO2RxCnt                              R30
+    uintPDO3RxCnt                              R31
+    uintPDO4RxCnt                              R32
+    uintPDO1TxCnt                              R33
+    uintPDO2TxCnt                              R34
+    uintPDO3TxCnt                              R35
+    uintPDO4TxCnt                              R36
+    uintSyncRxCnt                              R37
+    uintEMCYTxCnt                              R38
+       NMTState                                R39
+    lngFeedFRefBit                             R40 feedforward riscalato su fondo scala di tensione raddrizata
+                                               R41 100% è 131071
+ lngFeedFRefNormCLA                            R42 feedforward attuale tenendo conto di tensione raddrizata
+                                               R43
+            Merker1                            R44
+                                               Bit 0 - InMarcia
+                                               Bit 1 - OldZM
+                                               Bit 2 - PotenzaOn
+                                               Bit 3 - ConsensoOK
+                                               Bit 4 - CmdArrestoMarciaFl
+                                               Bit 5 - FineRampa
+                                               Bit 6 - MastSlaveSPIFl
+                                               Bit 7 - GuardoAll
+                                               Bit 8 - Rison_RunFl
+                                               Bit 9 - PI_BuckAndGancio_RunFl
+                                               Bit 10 -MasterRipartFl
+                                               Bit 11 -SlaveRipartFl
+                                               Bit 12 - DisRampaTensFl
+                                               Bit 13 - FinePrec1Fl
+                                               Bit 14 – DISABLEENABLE_Old
+                                               Bit 15 - PrealDCHiFl
+            Merker2                            R45
+                                               bit 0 – ReadyFl ConsensoOK e tensione DCLink presente
+                                               bit 1 – FaultFl – allarmi presenti
+                                               bit 2 – VoltCntrlFl in voltage control
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                                DOCUMENTAZIONE SOFTWARE
+
+  Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 24 di Pag. 29
+
+                                                bit 3 - LocaleRemotoFl
+                                                bit 4 – InCurrentLimitFl output in current limit
+                                                bit 5 - SkipFirstRdFl
+                                                bit 6 - FineRampaRisFl
+                                                bit 7 - SWResFl
+                                                bit 8 – ToggleMuxDatoNomeFl
+                                                bit 9 – ResetOldFl
+                                                bit 10 – MuxPollWaitRxFl
+                                                bit 11 – MuxRxInOldFl
+                                                bit 12 – MuxPollInPausaFl
+                                                bit 13 – MuxInRxFl
+                                                bit 14 – MuxPollInTxFl
+                                                bit 15 – NormPIControlFl
+
+     intLimBuckMaxAtt                           R46 limite modulazione massima step down
+       uintCLA2Time                             R47 tempo esecuzione Cla1Task2                                                            xx.x [us]
+
+
+
+      4.1.2.3 Breve3
+
+           Nome                           Descrizione
+    lngCla2TaskCnt    R48 contatore di esecuzione Cla2Task
+                      R49
+       CmdDaCan       R50
+                      bit 2 – RESET_DA_CAN
+                      bit 3 – DISABLEENABLE_DA_CAN non applicato
+RefPITensOutDaCanPL R51 - riferimento di tensione da CAN (PLC)                                                                            xxx.x[V]
+             C
+   LimE0CorrDaCan     R52 - limite di corrente in uscita da CAN (rPLC)                                                                     xxx.x [A]
+        uintInputs    R53
+                      bit 0 -ZM
+                      bit 1- ZMY
+                      bit 2 – Z0
+                      bit 3 – Z1
+                      bit 4 – Z2
+                      bit 5 – Z3
+       uintOutputs    R54
+                      bit 0 – KE
+                      bit 1 - KF
+         RifTens      R55 riferimento di tensione                                                                                            xxx.xx[V]
+      TensVOutSPI     R56 tensione misurata in uscita                                                                                         xxx.xx[V]
+    MuxRxInAllarms    R57
+                      bit 0 MPU
+                      bit1 MPW
+    MuxRxInPgmNo      R58 programma scheda driver
+   MuxRxInPgmCrc      R59 crc del programma scheda driver
+    uintADC1IntCnt    R60 ADC1 interrupt counter
+   uintADC1IntTime    R61 ADC1 interrupt execution time in us                                                                           xx.x [us]
+    uintADC2IntCnt    R62 non usato
+    uintECap1IntCnt   R63 non usato
+      uintI2CIntCnt   R64 contatore dei interrupt I^2 Bus                                                                                xxxx [n]
+  uintI2CErrSourceInt R65
+     uintNACK_Cnt     R66 contatore dei NACK I^2 Bus                                                                                     xxxx [n]
+     uintCla2IntCnt   R67 end of ClaTask2 interrupt
+lngClaOutPWM2_CMPA R68 PWM2_CMPA value
+
+        Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                  Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+ MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 25 di Pag. 29
+
+                                         R69
+                                         R70
+      ColoriA11M                         R71 0x2421;//Verde,Rosso,Verde,Blue
+
+
+
+
+     4.1.2.4 Breve4
+
+               Nome                                Descrizione
+       LinL0IntCount                               R72 contatore dei interrupt LIN                          xxxx [n]
+      LinL0ErrIntCount                             R73
+        intTensE4Filt                              R74 non usato
+                                                   R75
+          int16ClaIU                               R76 -
+          int16ClaIW                               R77 -
+              IW                                   R78
+         int16ClaAUX                               R79
+          int16ClaE0                               R80
+             E2E3                                  R81
+      lngEnergyRefCan                              R82 DW da DC/DC converter                             xxxx.xx J
+                                                   R83
+             E4                                    R84
+    intVoltSetDaEnergy                             R85 set di tensione dinamica                          xxx.x [V]
+             VB                                    R86
+    uint16Tim0ExeTime                              R87
+             E5                                    R88
+     uintSpibRxFIntCnt                             R89 SPI-B interrupt non abilitato. Legge tensione intermedia
+        ADValueSPIB                                R90 valore puro letto da SPI_B in 16 bit
+                                                   R91
+      lngClaSPIB_Data                              R92 valore letto da SPI-B spostato di offset (rete raddrizzata)
+                                                   R93
+        int16ClaAUXFlt                             R94 riferimento tens locale
+        int16ClaTMPFlt                             R95 gancio locale
+
+
+
+     4.1.2.5 Breve5
+
+              Nome                               Descrizione
+               ANA0                              R96 Ingresso ANA0                                                                                 xxxx [n]
+               ANA1                              R97 Ingresso ANA1                                                                                 xxxx [n]
+               ANA2                              R98 Ingresso ANA2                                                                                 xxxx [n]
+               ANA3                              R99 Ingresso ANA3                                                                                 xxxx [n]
+               ANA4                              R100 Ingresso ANA4                                                                                xxxx [n]
+               ANA5                              R101 Ingresso ANA5                                                                                xxxx [n]
+               ANA6                              R102 Ingresso ANA6                                                                                xxxx [n]
+               ANA7                              R103 Ingresso ANA7                                                                                xxxx [n]
+               ANB0                              R104                                                                                              xxxx [n]
+               ANB1                              R105
+               ANB2                              R106
+               ANB3                              R107
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 26 di Pag. 29
+
+           ANB4                                  R108
+           ANB5                                  R109
+           ANB6                                  R110
+           ANB7                                  R111
+         DebugCOobj                              R112
+                                                 R113
+         intTensVOut                             R114 valore di tensione uscita filtrato in 14 bit
+                                                 R115
+           DebVar                                R116
+       uintPeriodAttU                            R117 600 50 kHz
+        ADValueSPIA                              R118 dato puro da SPIA in +/- 15 bit
+                                                 R119
+
+
+
+
+     4.1.2.6 Breve6
+
+              Nome                               Descrizione
+       uintIntegTime     R120 non usato
+  int16ClaRefGancioE0    R121 riferimento PI di gancio
+         int16ClaE0      R122 feedback PI di gancio
+  int16ClaOutGancioE0    R123 l'uscita regolatore PI di gancio
+     lngTotEnergyLC      R124 Energia totale da mantenere su C del AC/DC e L di carico
+                         xxxx.xx[J]
+                         R125
+        DspPointer       R126
+          DspData        R127
+intRefPITensOutDaEnergy R128
+      PWM_IUP_Perc       R129 % di modulazione gamba U
+      PWM_IUN_Perc       R130
+  intSlaveRefCorrDaCan   R131 riferimento di corrente dal Master
+  intSlaveRefTensDaCan   R132 riferimento di tensione dal Master
+ uint16RipartMessRxCnt   R133 contatore dei messagi da Master
+ RefTensOutDaMastNorm R134 riferimento di tensione normalizzato su tensione d'uscita
+       KpTensOutAtt      R135 guadagno proporzionale attuale
+       KiTensOutAtt      R136 guadagno integrale attuale
+   uintClkSerMACDataIn   R137
+ uintClkSerMACMessCnt    R138 contatore dei messagi con la MAC
+   stato_clk_ser_MAC.all R139
+       KiCorrBuckAtt     R140 guadagno integrale attuale
+    Pwm1CntStartAdIU2    R141 valore PWM1 counter al ADC1 interrupt
+      Pwm1CntAtAdc1      R142 valore PWM1 counter al ADC1 interrupt
+                         R143
+
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                                DOCUMENTAZIONE SOFTWARE
+
+  Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 27 di Pag. 29
+
+
+
+
+      4.1.2.7 Breve7
+
+             Nome                             Descrizione
+                    R144 proporzionale attuale anello di tens. A valle di Buck
+       intKpHoldVBAtt
+                    R145 tensione attuale a valle di buck
+        intTensBridge                                                       xxx.xx [%]
+                    R146 tensione riferimento a valle di buck
+         intRefBridge                                                    xxx.xx [%]
+                    R147 correzione riferimento di corrente buck
+int16ClaOutCorrezBridge                                                    xxx.xx [%]
+                    R148 – rampa gancio su limiti di corrente
+intRampaOutGancioVOut
+         intRampaRisR149 – rampa risonante
+     OutPWM3_CMPA   R150 - soglia compare in PWM3 ticks risonante
+                    R151 riferimento di tensione in uscita
+      intRefPITensOut                                                         xxx.xx[%]
+        intFeedbVOutR152 feedback di tensione                                 xxx.xx[%]
+                    R153 l'uscita regolatore di tensione
+    int16ClaOutPIVOut                                                          xxx.xx[%]
+                    R154 feedback di corrente in uscita buck
+           int16ClaIU                                                          xxx.xx[%]
+                    R155 l'uscita regolatore di corrente buck
+ int16ClaOutPICorrBuck                                                        xxx.xx[%]
+                    R156
+     int16FeedFScaled
+           OutPWM2  R157 % di modulazione gamba V                             xxx.xx[%]
+     OutPWM2_CMPA   R158 soglia di compare
+   OutPWM2HR_CMPA   R159 soglia di compare HR
+                    R160
+                    R161
+lngClaOutPWM2HR_CMP R162 OutPWM2HR_CMPA in 32 bit
+          A
+                    R163
+                    R164
+                    R165
+                    R166
+                    R167
+
+
+
+
+        Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                  Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+ MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 28 di Pag. 29
+
+
+Schemi a blocchi
+
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+                                                               DOCUMENTAZIONE SOFTWARE
+
+ Cod. Documento: W39ND03860                                            Data di Emissione: 5/12/18                                                    Pag. 29 di Pag. 29
+
+
+
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono essere informati del contenuto.
+
+MDTNDT01 - 29/07/1999
+

@@ -1,0 +1,2145 @@
+                                                                   DOCUMENTAZIONE SOFTWARE
+
+
+  Cod. Documento : W39ND03890                                                Data di Emissione : 29/09/2018                                              Pag. 1 di Pag. 43
+
+
+ OGGETTO: Documentazione applicazione 9ND03890 su scheda R16R
+
+     AZIONE                             ENTE                           DATA                           NOMINATIVO                                                   FIRMA
+
+  Redazione                             T.S.W.                                                         F. Dal Sasso                                      Filippo Dal Sasso
+
+     Verifica                           T.S.W.
+
+Approvazione                            T.S.W.
+
+
+
+
+                                                                         LISTA DI DISTRIBUZIONE
+            ENTE                                                          NOMINATIVO / NOMINATIVI                                                                             COPIE
+
+             TGC                                                                                                                                                                    1
+
+
+
+
+                                                     REGISTRAZIONE DELLO STATO DI REVISIONE
+REV.                       MOTIVO DELLA MODIFICA                                                        ESEGUITA                    APPROVATA                                 DATA
+ 0                                    Versione Iniziale                                               F. Dal Sasso                     A. Signori                          29/09/18
+
+
+
+
+     Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                               Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                               Data di Emissione : 29/09/2018                                              Pag. 2 di Pag. 43
+
+
+
+
+INDICE
+
+1DOCUMENTI CORRELATI............................................................................................................ 3
+
+2DESCRIZIONE GENERALE..........................................................................................................3
+
+3DESCRIZIONE DELL’HARDWARE...............................................................................................4
+
+  3.1Descrizione dei segnali della scheda R16R .............................................................................................................6
+
+
+4DESCRIZIONE DEL SOFTWARE..................................................................................................7
+
+5DESCRIZIONE DEL FUNZIONAMENTO DEL SOFTWARE..........................................................8
+
+  5.1Descrizione dei parametri.........................................................................................................................................8
+
+  5.2Descrizione dei dati reali.........................................................................................................................................36
+     5.2.1 Comando breve 1 di 16 words.......................................................................................................................36
+     5.2.2 Comando breve 2 di 16 words.......................................................................................................................37
+     5.3.3 Comando breve 3 di 16 words........................................................................................................................38
+     5.3.4 Comando breve 4 di 16 words........................................................................................................................38
+     5.3.5 Comando breve 5 di 16 words........................................................................................................................39
+     5.3.6 Comando breve 6 di 16 words........................................................................................................................39
+     5.3.7 Comando breve 7 di 16 words........................................................................................................................40
+
+  5.3Descrizione allarmi..................................................................................................................................................42
+     5.3.1 Descrizione allarmi della 1a Word..................................................................................................................42
+     5.3.2 Descrizione allarmi della 2a Word..................................................................................................................42
+     5.3.3 Codice allarmi per display 7 segmenti ...........................................................................................................42
+
+
+
+
+  Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                            Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                              Pag. 3 di Pag. 43
+
+
+
+1 DOCUMENTI CORRELATI
+
+
+
+
+2 DESCRIZIONE GENERALE
+
+L’applicazione 9ND03890 implementa il controllo dei convertitori DC/DC della commessa 170458,
+o commessa INFN. Nello specifico il firmware implementa il controllo del convertitore DC/DC che
+alimenta il quadrupoli da 88A di corrente nominale.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                               Data di Emissione : 29/09/2018                                              Pag. 4 di Pag. 43
+
+
+
+
+3 DESCRIZIONE DELL’HARDWARE
+L’applicazione 9ND03890 è realizzata per la scheda R16R. La Figura 3.1 mostra il diagramma a
+blocchi della scheda R16R. La scheda R16R include le seguenti unità:
+
+      1.      Condizionamento ingressi analogici;
+      2.      Seriale sincrona ad alta velocità (SPIA);
+      3.      Seriale sincrona ad alta velocità (SPIB);
+      4.      Digital Signal Processor (DSP);
+      5.      Complex Programmable Logic Device (CPLD);
+      6.      Modulo CAN;
+      7.      Seriale asincrona (RS485);
+      8.      Uscite analogiche;
+      9.      Ingressi ed uscite digitali.
+
+
+
+
+              POWER
+              SUPPLY                                                                                                                                    CAN BUS
+
+
+            ANALOG
+            CONDITIONING                                                                                                                                   RS485
+
+                                                                       DSP
+                DIGITAL I/O                                                                                                                               ANALOG
+                                                                                                                                                          OUTPUT
+                SPIA
+
+                                                                                                                   CPLD                                  DRIVER
+                SPIB
+
+
+                                                                  Fig. 3.1 – Diagramma a blocchi R16R
+
+
+
+Condizionamento ingressi analogici
+
+Il condizionamento degli ingressi analogici modifica i segnali analogici acquisiti dal convertitore
+buck di potenza per renderli compatibili alla caratteristiche elettriche dei convertitori Analogico-
+Digitali (ADC) presenti nella scheda R16R. Inoltre il condizionamento si occupa di ridurre l'entità
+dei rumori sovrapposti ai segnali da campionare.
+
+Seriale sincrona ad alta velocità (SPIA)
+
+La seriale sincrona ad alta velocità (SPIA) è una tipica comunicazione seriale sincrona con segnale
+di clock, data in, data out e abilitazione alla trasmissione. Il modulo permette l'invio di un numero di
+bit impostabili con un baud rate anch'esso impostabile. Nell'applicazione 9ND02700 la SPIA non è
+utilizzata.
+  Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                            Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                               Data di Emissione : 29/09/2018                                              Pag. 5 di Pag. 43
+
+
+Seriale sincrona ad alta velocità (SPIB)
+
+La seriale sincrona ad alta velocità (SPIB) è una tipica comunicazione seriale sincrona con segnale
+di clock, data in, data out e abilitazione alla trasmissione. Il modulo permette l'invio di un numero di
+bit impostabili con un baud rate anch'esso impostabile. Nell'applicazione 9ND02700 la SPIB non è
+utilizzata.
+
+Digital Signal Processor (DSP)
+
+Digital Signal Processor implementa l'algoritmo di controllo del sistema e tutti i protocolli di
+comunicazione, ad esempio Modbus.
+
+Complex Programmable Logic Device (CPLD)
+
+Complex Programmable Logic Device implementa la gestione digitale della scheda.
+
+
+Modulo CAN
+
+Il modulo CAN implementa il protocollo di comunicazione seriale Controller Area Network in
+accordo con le direttive ISO 11898 Standard. La comunicazione CAN è utilizzata per trasferire dati
+tra le schede R16R dell'AFE, R16R del buck ed espansione I/O D920.
+
+
+Seriale asincrona (RS485)
+
+La seriale asincrona (RS485) implementa una linea di trasmissione per incontrare le specifiche
+ANSI Standards TIA/EIA-422-B e TIA/EIA-485-A. Il baud rate è configurato a 9600 bps. RS485 è
+utilizzato per trasferire dati tra la scheda R16R e il pannellino HMI. Nello specifico la
+comunicazione avviene sfruttando il protocollo Modbus (application layer, modello ISO/OSI).
+
+
+Uscite analogiche
+
+La scheda R16R presenta due uscite analogiche realizzate grazie a due convertitori Digitali-
+Analogici (DAC). Le uscite analogiche sono segnali single-ended, ossia riferite alla massa della
+scheda. E' garantita una ottima linearità e precisione per un intervallo di tensione compreso tra -8V
+e +8V.
+
+
+
+
+  Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                            Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                              Pag. 6 di Pag. 43
+
+
+
+
+3.1        Descrizione dei segnali della scheda R16R
+ Nome                         Tipo                         Descrizione                                                                                                    Attivo
+  ZM                    Ingresso digitale                  Abilitazione convertitore                                                                                         HIGH
+  Z0                    Ingresso digitale                  Allarme Crowbar (se abilitato)                                                                                     LOW
+  Z1                    Ingresso digitale                  Convertitore in marcia                                                                                            HIGH
+  Z2                    Ingresso digitale                  Selezione protocollo Modbus o EEI (Modbus alto)                                                                     x
+  Z3                    Ingresso digitale                  Reset allarmi                                                                                                     HIGH
+
+ Nome                         Tipo                         Descrizione                                                                                                    Attivo
+  KE                      Uscita digitale                  Convertitore abilitato (nessun allarme presente)                                                                   HIGH
+  KF                      Uscita digitale                  Attivazione modalità di “AUTOSPEGNIMENTO”                                                                          HIGH
+
+
+ Nome                           Tipo                              Descrizione
+   E0                    Ingresso analogico                       -
+ E2E3                    Ingresso analogico                       Lettura del segnale di corrente verso terra
+                                                                  -
+   E4                    Ingresso analogico
+                                                                  -
+   E5                    Ingresso analogico
+   IU                    Ingresso analogico                       -
+   IV                    Ingresso analogico                       Lettura della corrente dei convertitori
+   IW                    Ingresso analogico                       -
+   VB                    Ingresso analogico                       Lettura della tensione del DC-link
+  AUX                    Ingresso analogico                       Lettura della tensione dell'uscita del convertitore
+ TMP                     Ingresso analogico
+
+
+
+ Nome                        Tipo       Descrizione
+  ID                   Uscita analogica Uscita analogica impostabile
+  U6                   Uscita analogica Uscita analogica impostabile
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                              Pag. 7 di Pag. 43
+
+
+
+
+4 DESCRIZIONE DEL SOFTWARE
+L’applicazione 9ND03890 implementa le seguenti caratteristiche:
+
+          acquisizione delle grandezze analogiche (riferimenti, tensioni, correnti, temperature, ecc.);
+          controllo del convertitore DC/DC
+          Generazione dei segnali PWM a 40KHz;
+          acquisizione della corrente misurata dal DCCT attraverso una comunicazione SPI;
+          gestione dei riferimenti di tensione e limiti di corrente da analogico o da digitale;
+          gestione della comunicazione CAN;
+          gestione della memorizzazione dei parametri in EEPROM;
+          gestione della comunicazione RS485 e implementazione di due protocolli di comunicazione
+           a livello Application del modello ISO/OSI (protocollo Modbus e protocollo proprietario EEI);
+          gestione degli allarmi.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                              Pag. 8 di Pag. 43
+
+
+
+
+5 DESCRIZIONE DEL FUNZIONAMENTO DEL SOFTWARE
+
+
+5.1        Descrizione dei parametri
+
+I parametri di “Setup” dell'applicazione 9ND03890 sono i seguenti:
+
+
+Codice                                                                                        Descrizione
+                  PASSWORD
+                  Valore minimo [n]:                                                    0
+  1               Valore massimo [n]:                                               65535
+                  Valore di default [n]:                                                0
+
+Questo parametro è utilizzato come abilitazione alla scrittura dei parametri di Setup. La protezione
+alla scrittura dei parametri è attiva solo con il protocollo Modbus.
+
+
+Codice                                                                                        Descrizione
+                  MARCIA LOCALE
+                  Valore minimo [n]:                                                          0
+  2               Valore massimo [n]:                                                         1
+                  Valore di default [n]:                                                      0
+
+Questo parametro è utilizzato come “Marcia” software quando il convertitore è in modalità
+“LOCALE”.
+
+
+Codice                                                                                        Descrizione
+                  FREQUENZA PWM
+                  Valore minimo [KHz]:                                                 40.0
+  3               Valore massimo [KHz]:                                                40.0
+                  Valore di default [KHz]:                                             40.0
+
+Questo parametro è utilizzato come “Marcia” software quando il convertitore è in modalità
+“LOCALE”.
+
+
+Codice                                                                                        Descrizione
+                  DIGIT
+                  Valore minimo [n]:                                                        0
+  4               Valore massimo [n]:                                                      47
+                  Valore di default [n]:                                                    0
+
+Questo parametro è usato per testare il funzionamento del codice allarme visualizzato su display a
+sette segmenti del convertitore.
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                              Pag. 9 di Pag. 43
+
+
+Codice                                                                                        Descrizione
+                  SOFTWARE SWITCH
+                  Valore minimo [n]:                                                    0
+  5               Valore massimo [n]:                                               32767
+                  Valore di default [n]:                                                0
+
+Questo parametro abilita le diverse funzionalità implementate nell'applicazione 9ND03890. Ciasun
+bit di questo parametro identifica una particolare funzionalità del convertitore DC/DC. Il significato
+di ogni bit è spiegata di seguito:
+
+  Bit               Nome                                                           Descrizione
+   0             EnLocalMode                       Abilita il funzionamento in LOCALE del convertitore DC/DC (1 =
+                                                   LOCALE)
+  1                EnTestReg                       Disabilita l'allarme ed il warning di ripple di corrente eccessivo (1 =
+                                                   DISABILITA)
+  2            FeedbDCCTE0                         Abilita la retroazione di corrente da segnale analogico E0E1 (1 =
+                                                   E0E1; 0 = DCCT)
+   3                  -                            NON USATO
+   4                  -                            NON USATO
+   5             EnSerialRef                       Abilita riferimento da seriale (set di corrente su S100)
+   6            EnAllCrowBar                       Abilita l'allarme Crowbar con ingresso digitale Z0
+   7                  -                            NON USATO
+   8                  -                            NON USATO
+   9                  -                            NON USATO
+  10                  -                            NON USATO
+  11                  -                            NON USATO
+  12                  -                            NON USATO
+  13                  -                            NON USATO
+  14                  -                            NON USATO
+  15                  -                            NON USATO
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 10 di Pag. 43
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO IU
+                  Valore minimo [%]:      -50.00
+  6               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso IU.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO IU
+                  Valore minimo [%]:     -150.00
+  7               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico IU.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO IV
+                  Valore minimo [%]:      -50.00
+  8               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso IV.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO IV
+                  Valore minimo [%]:     -150.00
+  9               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico IV.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO IW
+                  Valore minimo [%]:      -50.00
+ 10               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso IW.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 11 di Pag. 43
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO IW
+                  Valore minimo [%]:     -150.00
+ 11               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico IW.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO AUX
+                  Valore minimo [%]:      -50.00
+ 12               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso AUX.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO AUX
+                  Valore minimo [%]:     -150.00
+ 13               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico AUX.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO TMP
+                  Valore minimo [%]:      -50.00
+ 14               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso TMP.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO TMP
+                  Valore minimo [%]:     -150.00
+ 15               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico TMP.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 12 di Pag. 43
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO VB
+                  Valore minimo [%]:      -50.00
+ 16               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso VB.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO VB
+                  Valore minimo [%]:     -150.00
+ 17               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico VB.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO E0-E1
+                  Valore minimo [%]:      -50.00
+ 18               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso E0-E1.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO E0-E1
+                  Valore minimo [%]:     -150.00
+ 19               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico E0-E1.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO E2-E3
+                  Valore minimo [%]:      -50.00
+ 20               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso E2-E3.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 13 di Pag. 43
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO E2-E3
+                  Valore minimo [%]:     -150.00
+ 21               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico E2E3.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO E4
+                  Valore minimo [%]:      -50.00
+ 22               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso E4.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO E4
+                  Valore minimo [%]:     -150.00
+ 23               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico E4.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER INGRESSO E5
+                  Valore minimo [%]:      -50.00
+ 24               Valore massimo [%]:      50.00
+                  Valore di default [%]:    0.00
+
+Questo parametro serve per compensare l’eventuale offset analogico dell’ingresso E5.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER INGRESSO E5
+                  Valore minimo [%]:     -150.00
+ 25               Valore massimo [%]:     150.00
+                  Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'ingresso analogico E5.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 14 di Pag. 43
+
+
+Codice                                         Descrizione
+                   SELEZIONE DEL PARAMETRO REALE PER L'USCITA ANALOGICA ID
+                   Valore minimo [n]:         -1
+ 28                Valore massimo [n]:       167
+                   Valore di default [n]:     -1
+
+Questo parametro seleziona il parametro reale da riprodurre con l'uscita analogica ID.
+
+
+Codice                                          Descrizione
+                   GUADAGNO DI COMPENSAZIONE PER L'USCITA ANALOGICA ID
+                   Valore minimo [%]:     -200.00
+ 29                Valore massimo [%]:     200.00
+                   Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'uscita analogica ID. L'uscita in
+tensione è ricavata con la formula
+
+                                                                       S26                   S27
+                                                          V ID =           ⋅ V DSP S25 ⋅10 +     ⋅10
+                                                                       100                   100
+dove
+
+ V ID è la tensione in uscita in Volt;
+V DSP S25 è la tensione normalizzata all'interno del microprocessore.
+
+
+Codice                                          Descrizione
+                   OFFSET DI COMPENSAZIONE PER L'USCITA ANALOGICA ID
+                   Valore minimo [%]:     -100.00
+ 30                Valore massimo [%]:     100.00
+                   Valore di default [%]:    0.00
+
+Questo parametro serve per introdurre un offset sull'uscita analogica ID. L'uscita in tensione è
+ricavata con la formula
+
+                                                                       S26                   S27
+                                                          V ID =           ⋅ V DSP S25 ⋅10 +     ⋅10
+                                                                       100                   100
+dove
+
+ V ID è la tensione in uscita in Volt;
+V DSP S25 è la tensione normalizzata all'interno del microprocessore.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 15 di Pag. 43
+
+
+Codice                                         Descrizione
+                   SELEZIONE DEL PARAMETRO REALE PER L'USCITA ANALOGICA U6
+                   Valore minimo [n]:         -1
+ 31                Valore massimo [n]:       167
+                   Valore di default [n]:     -1
+
+Questo parametro seleziona il parametro reale da riprodurre con l'uscita analogica U6. Nella
+tabella sotto sono riportati i segnali digitali per comodità.
+
+
+Codice                                          Descrizione
+                   GUADAGNO DI COMPENSAZIONE PER L'USCITA ANALOGICA U6
+                   Valore minimo [%]:     -200.00
+ 32                Valore massimo [%]:     200.00
+                   Valore di default [%]:  100.00
+
+Questo parametro serve per introdurre un fattore moltiplicativo sull'uscita analogica U6. L'uscita in
+tensione è ricavata con la formula
+
+                                                                       S29                  S30
+                                                         V U6 =            ⋅V DSP S28 ⋅10 +     ⋅10
+                                                                       100                  100
+dove
+
+ V U6 è la tensione in uscita in Volt;
+V DSP S28 è la tensione normalizzata all'interno del microprocessore.
+
+
+Codice                                          Descrizione
+                   OFFSET DI COMPENSAZIONE PER L'USCITA ANALOGICA U6
+                   Valore minimo [%]:     -100.00
+ 33                Valore massimo [%]:     100.00
+                   Valore di default [%]:    0.00
+
+Questo parametro serve per introdurre un offset sull'uscita analogica U6. L'uscita in tensione è
+ricavata con la formula
+
+                                                                       S29                  S30
+                                                         V U6 =            ⋅V DSP S28 ⋅10 +     ⋅10
+                                                                       100                  100
+dove
+
+ V U6 è la tensione in uscita in Volt;
+V DSP S28 è la tensione normalizzata all'interno del microprocessore.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 16 di Pag. 43
+
+
+Codice                                            Descrizione
+                   INDIRIZZO SERIALE EEI DELLA SCHEDA R16R
+                   Valore minimo [n]:             0
+ 34                Valore massimo [n]:           31
+                   Valore di default [n]:         -
+
+Questo parametro definisce l'indirizzo della scheda R16R utilizzato nella comunicazione seriale
+RS485 EEI. La scheda risponde sempre all'indirizzo 30.
+
+
+Codice                                          Descrizione
+                   INDIRIZZO MODBUS DELLA SCHEDA R16R
+                   Valore minimo [n]:           1
+ 35                Valore massimo [n]:        127
+                   Valore di default [n]:       -
+
+Questo parametro definisce l'indirizzo della scheda R16R utilizzato nella comunicazione Modbus.
+
+
+Codice                                                                                        Descrizione
+                   BAUD RATE MODBUS
+                   Valore minimo [n]:                                              0
+ 36                Valore massimo [n]:                                             1
+                   Valore di default [n]:                               0 (9600 bps)
+
+Questo parametro definisce il baud rate della comunicazione Modbus.
+
+
+Codice                                                Descrizione
+                   BIT DI PARITA' MODBUS
+                   Valore minimo [n]:                  -
+ 37                Valore massimo [n]:                 -
+                   Valore di default [n]: 0 (Nessun bit)
+
+Questo parametro definisce il numero di bit di parità nella comunicazione Modbus.
+
+
+Codice                                                                                        Descrizione
+                   NUMERO BIT DI STOP MODBUS
+                   Valore minimo [n]:                                                         -
+ 38                Valore massimo [n]:                                                        -
+                   Valore di default [n]:                                                     1
+
+Questo parametro definisce il numero di bit di stop nella comunicazione Modbus.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 17 di Pag. 43
+
+
+Codice                                          Descrizione
+                   IDENTIFICATORE DEL NODO CAN OPEN
+                   Valore minimo [n]:          1
+ 39                Valore massimo [n]:       127
+                   Valore di default [n]:       -
+
+Questo parametro definisce l'identificatore della nodo CAN Open. NON USATO
+
+
+Codice                                        Descrizione
+                   BAUD RATE DELLA COMUNICAZIONE CAN BUS
+                   Valore minimo [n]:         0
+ 40                Valore massimo [n]:        3
+                   Valore di default [n]:     -
+
+Questo parametro definisce il baud rate della comunicazione CAN. In tabella sono specificati i
+valori possibili:
+
+                                          Valore                                     Descrizione
+                                            0                                         125 kbps
+                                            1                                         250 kbps
+                                            2                                         500 kbps
+                                            3                                          1 Mbps
+
+
+
+Codice                                                                                        Descrizione
+                   COBID RPDO1
+                   Valore minimo [n]:                                                    0
+ 41                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in ricezione RPDO1
+
+
+Codice                                                                                        Descrizione
+                   COBID RPDO2
+                   Valore minimo [n]:                                                    0
+ 42                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in ricezione RPDO2
+
+
+
+
+Codice                                                                                        Descrizione
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 18 di Pag. 43
+
+                   COBID RPDO3
+                   Valore minimo [n]:                                                    0
+ 43                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in ricezione RPDO3
+
+
+Codice                                                                                        Descrizione
+                   COBID RPDO4
+                   Valore minimo [n]:                                                    0
+ 44                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in ricezione RPDO4
+
+
+Codice                                                                                        Descrizione
+                   COBID TPDO1
+                   Valore minimo [n]:                                                    0
+ 45                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in trasmissione TPDO1
+
+
+Codice                                                                                        Descrizione
+                   COBID TPDO2
+                   Valore minimo [n]:                                                    0
+ 46                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in trasmissione TPDO2
+
+
+Codice                                                                                        Descrizione
+                   COBID RPDO3
+                   Valore minimo [n]:                                                    0
+ 47                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in trasmissione TPDO3
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 19 di Pag. 43
+
+Codice                                                                                        Descrizione
+                   COBID RPDO4
+                   Valore minimo [n]:                                                    0
+ 48                Valore massimo [n]:                                                2047
+                   Valore di default [n]:                                                -
+
+Questo parametro permette di impostare il COB-ID del messaggio CAN in trasmissione TPDO4
+
+
+Codice                                                                                        Descrizione
+                   EVENT TIMER
+                   Valore minimo [ms]:                                                  1
+ 49                Valore massimo [ms]:                                             10000
+                   Valore di default [ms]:                                              -
+
+Questo parametro imposta il tempo di invio dei messaggi CAN in trasmissione.
+
+
+Codice                                         Descrizione
+                   TIME-OUT MESSAGGIO CAN RPDO1
+                   Valore minimo [ms]:         1
+ 50                Valore massimo [ms]:    10000
+                   Valore di default [ms]:     -
+
+Questo parametro imposta il tempo di intervento dell'allarme di time-out per il messaggio CAN
+RPDO1.
+
+
+Codice                                         Descrizione
+                   TIME-OUT MESSAGGIO CAN RPDO2
+                   Valore minimo [ms]:         1
+ 51                Valore massimo [ms]:    10000
+                   Valore di default [ms]:     -
+
+Questo parametro imposta il tempo di intervento dell'allarme di time-out per il messaggio CAN
+RPDO2.
+
+
+Codice                                         Descrizione
+                   TIME-OUT MESSAGGIO CAN RPDO3
+                   Valore minimo [ms]:         1
+ 52                Valore massimo [ms]:    10000
+                   Valore di default [ms]:     -
+
+Questo parametro imposta il tempo di intervento dell'allarme di time-out per il messaggio CAN
+RPDO3.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 20 di Pag. 43
+
+
+Codice                                         Descrizione
+                   TIME-OUT MESSAGGIO CAN RPDO4
+                   Valore minimo [ms]:         1
+ 53                Valore massimo [ms]:    10000
+                   Valore di default [ms]:     -
+
+Questo parametro imposta il tempo di intervento dell'allarme di time-out per il messaggio CAN
+RPDO4.
+
+
+Codice                                                                                        Descrizione
+                   DEBUG CAN OPEN 1
+                   Valore minimo [s]:                                                   0
+ 54                Valore massimo [s]:                                              32767
+                   Valore di default [s]:                                               -
+
+Questo parametro permette il debug del protocollo CAN Open
+
+
+Codice                                                                                        Descrizione
+                   DEBUG CAN OPEN 2
+                   Valore minimo [s]:                                                   0
+ 55                Valore massimo [s]:                                              32767
+                   Valore di default [s]:                                               -
+
+Questo parametro permette il debug del protocollo CAN Open
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 21 di Pag. 43
+
+Codice                                         Descrizione
+                  FONDO SCALA DI CORRENTE DI GAMBA
+                  Valore minimo [A]:       10.00
+ 60               Valore massimo [A]:     500.00
+                  Valore di default [A]:       -
+
+Questo parametro imposta il fondo scala della corrente per ciascuna gamba.
+
+
+Codice                                        Descrizione
+                  FONDO SCALA DELLA TENSIONE DI DC-LINK
+                  Valore minimo [V]:          0
+ 61               Valore massimo [V]:     300.0
+                  Valore di default [V]:       -
+
+Questo parametro imposta il fondo scala della tensione del DC-Link o tensione di ingresso del
+convertitore DC/DC.
+
+
+Codice                                         Descrizione
+                  FONDO SCALA DI CORRENTE DEL DCCT
+                  Valore minimo [A]:       10.00
+ 62               Valore massimo [A]:     550.00
+                  Valore di default [A]:       -
+
+Questo parametro imposta il fondo scala della corrente del DCCT.
+
+
+
+Codice                                        Descrizione
+                  FONDO SCALA DELLA TENSIONE DI USCITA
+                  Valore minimo [V]:          0
+ 64               Valore massimo [V]:     300.0
+                  Valore di default [V]:       -
+
+Questo parametro imposta il fondo scala della tensione di uscita del convertitore DC/DC.
+
+
+
+
+Codice                                                                                        Descrizione
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 22 di Pag. 43
+
+                   TEMPO MORTO DEI COMANDI
+                   Valore minimo [us]:                                                     0
+ 65                Valore massimo [us]:                                                 3.00
+                   Valore di default [us]:                                                 -
+
+Questo parametro imposta il tempo morto hardware del convertitore. Questo parametro è utilizzato
+per la stima della massima tensione d'uscita.
+
+
+Codice                                                                                        Descrizione
+                   MINIMO IMPULSO PER I COMANDI
+                   Valore minimo [us]:          0
+ 66                Valore massimo [us]:      3.00
+                   Valore di default [us]:      -
+
+Questo parametro imposta il minimo impulso permesso dal hardware per garantire un'accensione
+e uno spegnimento corretto dei componenti di potenza.
+
+
+
+
+Codice                                                                                        Descrizione
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 23 di Pag. 43
+
+                   LIMITE MINIMO DELLA TENSIONE DEL DC-LINK
+                   Valore minimo [V]:           0.0
+ 70                Valore massimo [V]:        300.0
+                   Valore di default [V]:         -
+
+Questo parametro imposta il minimo valore di tensione possibile nel DC-link prima dell'allarme di
+minima tensione DC-link.
+
+
+Codice                                           Descrizione
+                   RITARDO DI INTERVENTO DELL'ALLARME MINIMA TENSIONE DEL DC-LINK
+                   Valore minimo [s]:        0.001
+ 71                Valore massimo [s]:       2.000
+                   Valore di default [s]:        -
+
+Questo parametro imposta il tempo di ritardo prima dell'intervento dell'allarme di minima tensione
+DC-link.
+
+
+Codice                                           Descrizione
+                   LIMITE MASSIMO DELLA TENSIONE DEL DC-LINK
+                   Valore minimo [V]:          0.0
+ 72                Valore massimo [V]:       300.0
+                   Valore di default [V]:        -
+
+Questo parametro imposta il massimo valore di tensione possibile nel DC-link prima dell'allarme di
+massima tensione DC-link.
+
+
+Codice                                           Descrizione
+                   RITARDO DI INTERVENTO DELL'ALLARME MASSIMA TENSIONE DEL DC-LINK
+                   Valore minimo [s]:        0.001
+ 73                Valore massimo [s]:       2.000
+                   Valore di default [s]:        -
+
+Questo parametro imposta il tempo di ritardo prima dell'intervento dell'allarme di massima tensione
+DC-link.
+
+
+Codice                                            Descrizione
+                   SQUILIBRIO CORRENTI DI FASE
+                   Valore minimo [%]:          2.00
+ 74                Valore massimo [%]:        90.00
+                   Valore di default [%]:         -
+
+Questo parametro imposta il massimo squilibrio permesso tra le correnti di gamba del convertitore
+normalizzato rispetto alla corrente di fondo scala di gamba. NON USATO IN QUESTA
+APPLICAZIONE.
+
+Codice                                                                                        Descrizione
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                DOCUMENTAZIONE SOFTWARE
+
+
+ Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 24 di Pag. 43
+
+                    ALLARME PER CORRENTE MASSIMA
+                    Valore minimo [A]:      20.00
+ 75                 Valore massimo [A]:    500.00
+                    Valore di default [A]:      -
+
+Questo parametro imposta la massima corrente possibile prima dell'intervento dell'allarme di
+corrente massima software.
+
+
+Codice                                         Descrizione
+                 TEMPO DI RITARDO ALLARME TERMICO
+                 Valore minimo     [s]:       1
+ 76              Valore massimo [s]:        999
+                 Valore di default [s]:       0
+
+Questo parametro imposta il tempo di ritardo per l'allarme termico. L'allarme termico accade
+quando la corrente di fase è maggiore o uguale di 1.5 volte la corrente nominale.
+
+
+Codice                                         Descrizione
+                  TEMPERATURA MASSIMA DI ALLARME
+                  Valore minimo [°C]:       20.0
+ 77               Valore massimo [°C]:     110.0
+                  Valore di default [°C]:      -
+
+Questo parametro imposta la soglia di temperatura oltre la quale scatta l'allarme di sovra-
+temperatura del convertitore.
+
+
+Codice                                            Descrizione
+                    SOGLIA DI WARNING SULL'ERRORE DI CORRENTE
+                    Valore minimo [%]:         0.01
+ 78                 Valore massimo [%]:       50.00
+                    Valore di default [%]:        -
+
+Questo parametro imposta il massimo errore di corrente prima di segnalare il WARNING di ripple
+eccessivo sulla corrente. Il parametro è normalizzato rispetto alla soglia di errore di corrente del
+DCCT impostata in S130. Ipotizzando una soglia di errore di corrente del DCCT pari all'0.5% ed un
+valore di S78 pari al 2.0%, si ha che il WARNING verrà segnalato solo quando la corrente reale
+misurata dal DCCT differirà dalla corrente di riferimento di un valore pari a 100.0ppm.
+
+                                                                                   S78 S130
+                                                          Err Warning =               ⋅     ⋅S62
+                                                                                   100 100                                in [A]
+
+                                                                                     S78 S130
+                                                     ErrppmWarning =                    ⋅     ⋅106
+                                                                                     100 100       in [ppm]
+
+
+
+
+  Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                            Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 25 di Pag. 43
+
+
+Codice                                          Descrizione
+                   SOGLIA DI ALLARME SULLA CORRENTE VERSO TERRA
+                   Valore minimo [mA]:          2
+ 79                Valore massimo [mA]:      1000
+                   Valore di default [mA]:      -
+
+Questo parametro imposta il massimo valore di corrente permesso verso terra prima dell'allarme di
+corrente di dispersione verso terra troppo alta.
+
+
+Codice                                        Descrizione
+                  CORRENTE NOMINALE DI GAMBA
+                  Valore minimo [A]:       10.0
+ 80               Valore massimo [A]:    3000.0
+                  Valore di default [A]:      -
+
+Questo parametro imposta la corrente nominale di gamba.
+
+
+Codice                                          Descrizione
+                  TENSIONE NOMINALE DEL DC-LINK
+                  Valore minimo [A]:         10.0
+ 81               Valore massimo [A]:     3000.0
+                  Valore di default [A]:        -
+
+Questo parametro imposta la tensione nominale del DC-Link.
+
+
+Codice                                          Descrizione
+                  MASSIMA PENDENZA PERMESSA SUL RIFERIMENTO DI CORRENTE
+                  Valore minimo [A/s]:        0.2
+ 82               Valore massimo [A/s]:    2000.0
+                  Valore di default [A/s]:      -
+
+Questo parametro imposta la massima pendenza permessa sul riferimento della corrente d'uscita.
+
+
+
+
+Codice                                           Descrizione
+                  FILTRO SULLE CORRENTI DI GAMBA
+                  Valore minimo [n]:        0.0001
+ 85               Valore massimo [n]:       1.0000
+                  Valore di default [n]:         -
+
+Questo parametro imposta la massima pendenza permessa sul riferimento della corrente d'uscita.
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 26 di Pag. 43
+
+
+Codice                                         Descrizione
+                   GUADAGNO PROPORZIONALE DEL PI DI CORRENTE DCCT
+                   Valore minimo [n]:       0.00
+ 86                Valore massimo [n]:    150.00
+                   Valore di default [n]:      -
+
+Questo parametro imposta il guadagno proporzionale del PI di regolazione della corrente sul
+DCCT.
+
+
+Codice                                          Descrizione
+                   GUADAGNO INTEGRALE DEL PI DI CORRENTE DCCT
+                   Valore minimo [n]:     0.0000
+ 87                Valore massimo [n]:    3.0000
+                   Valore di default [n]:        -
+
+Questo parametro imposta il guadagno integrale del PI di regolazione della corrente sul DCCT.
+
+
+Codice                                          Descrizione
+                   LIMITE MASSIMO DELLA REGOLAZIONE DEL PI DI CORRENTE DCCT
+                   Valore minimo [%]:        0.00
+ 88                Valore massimo [%]:     100.00
+                   Valore di default [%]:       -
+
+Questo parametro imposta i limiti massimi (positivi e negativi) del regolatore PI della corrente sul
+DCCT.
+
+
+Codice                                        Descrizione
+                   GUADAGNO PROPORZIONALE DEL PI DI TENSIONE DI USCITA
+                   Valore minimo [n]:      0.00
+ 89                Valore massimo [n]:    20.00
+                   Valore di default [n]:     -
+
+Questo parametro imposta il guadagno proporzionale del PI di regolazione della tensione.
+
+
+Codice                                          Descrizione
+                   GUADAGNO INTEGRALE DEL PI DI TENSIONE DI USCITA
+                   Valore minimo [n]:     0.0000
+ 90                Valore massimo [n]:    1.0000
+                   Valore di default [n]:        -
+
+Questo parametro imposta il guadagno integrale del PI di regolazione della tensione.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 27 di Pag. 43
+
+
+Codice                                          Descrizione
+                   LIMITE MASSIMO DELLA REGOLAZIONE DEL PI DI TENSIONE DI USCITA
+                   Valore minimo [%]:        0.00
+ 91                Valore massimo [%]:      98.00
+                   Valore di default [%]:       -
+
+Questo parametro imposta i limiti massimi (positivi e negativi) del regolatore PI della tensione di
+uscita.
+
+
+Codice                                         Descrizione
+                  OFFSET DI COMPENSAZIONE PER LA CORRENTE DEL DCCT
+                  Valore minimo [n]:     -1.0000
+ 92               Valore massimo [n]:     1.0000
+                  Valore di default [n]:       -
+
+Questo parametro serve per compensare l’eventuale offset presente nella lettura di corrente del
+DCCT.
+
+
+Codice                                         Descrizione
+                  GUADAGNO DI COMPENSAZIONE PER LA CORRENTE DEL DCCT
+                  Valore minimo [n]:     -2.0000
+ 93               Valore massimo [n]:     2.0000
+                  Valore di default [n]:       -
+
+Questo parametro serve per introdurre un fattore moltiplicativo sulla lettura di corrente del DCCT.
+
+
+Codice                                          Descrizione
+                  FILTRO SULLE TENSIONE DEL DC-LINK
+                  Valore minimo [n]:       0.0001
+ 94               Valore massimo [n]:      0.2000
+                  Valore di default [n]:        -
+
+Questo parametro imposta un filtro sulla lettura della tensione del DC-Link.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 28 di Pag. 43
+
+
+Codice                                         Descrizione
+                   GUADAGNO PROPORZIONALE DEL PI DI CORRENTE DI GAMBA
+                   Valore minimo [n]:       0.00
+ 95                Valore massimo [n]:    150.00
+                   Valore di default [n]:      -
+
+Questo parametro imposta il guadagno proporzionale del PI di regolazione della corrente di
+gamba.
+
+
+Codice                                          Descrizione
+                   GUADAGNO INTEGRALE DEL PI DI CORRENTE DI GAMBA
+                   Valore minimo [n]:     0.0000
+ 96                Valore massimo [n]:    3.0000
+                   Valore di default [n]:        -
+
+Questo parametro imposta il guadagno integrale del PI di regolazione della corrente di gamba.
+
+
+Codice                                          Descrizione
+                   LIMITE MASSIMO DELLA REGOLAZIONE DEL PI DI CORRENTE DI GAMBA
+                   Valore minimo [%]:        0.00
+ 97                Valore massimo [%]:     100.00
+                   Valore di default [%]:       -
+
+Questo parametro imposta i limiti massimi (positivi e negativi) del regolatore PI della corrente di
+gamba.
+
+
+Codice                                          Descrizione
+                   CORRENTE DI RIFERIMENTO
+                   Valore minimo [A]:        0.00
+100                Valore massimo [A]:     350.00
+                   Valore di default [A]:       -
+
+Questo parametro imposta la corrente di riferimento quando il convertitore è in modalità LOCALE.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 29 di Pag. 43
+
+
+Codice                                           Descrizione
+                   RESISTENZA ELETTRICA DEL CAVO
+                   Valore minimo [Ohm]:      0.000
+106                Valore massimo [Ohm]:     0.200
+                   Valore di default [Ohm]:      -
+
+Questo parametro imposta la resistenza elettrica del cavo utilizzato per connettere il carico.
+
+
+Codice                                           Descrizione
+                   RESISTENZA ELETTRICA DEL CARICO
+                   Valore minimo [Ohm]:      0.000
+107                Valore massimo [Ohm]:     1.000
+                   Valore di default [Ohm]:      -
+
+Questo parametro imposta la resistenza elettrica del carico utilizzato.
+
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 0%
+                   Valore minimo [mH]:         0.1
+108                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico al 0% della corrente di fondo scala del
+DCCT. Questo parametro permette di inserire un punto della caratteristiche corrente-induttanza del
+carico, garantendo in questo modo le migliori prestazioni per il controllo di corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 5%
+                   Valore minimo [mH]:         0.1
+109                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico fino al 5% della corrente di fondo scala
+del DCCT. Questo parametro permette di inserire un punto della caratteristiche corrente-induttanza
+del carico, garantendo in questo modo le migliori prestazioni per il controllo di corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 10%
+                   Valore minimo [mH]:         0.1
+110                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 5% e il 10% della corrente di fondo
+scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche corrente-
+induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di corrente
+nel carico.
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 30 di Pag. 43
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 15%
+                   Valore minimo [mH]:         0.1
+111                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 10% e il 15% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 20%
+                   Valore minimo [mH]:         0.1
+112                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 15% e il 20% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 25%
+                   Valore minimo [mH]:         0.1
+113                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 20% e il 25% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 30%
+                   Valore minimo [mH]:         0.1
+114                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 25% e il 30% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 31 di Pag. 43
+
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 35%
+                   Valore minimo [mH]:         0.1
+115                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 30% e il 35% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 40%
+                   Valore minimo [mH]:         0.1
+116                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 35% e il 40% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 45%
+                   Valore minimo [mH]:         0.1
+117                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 40% e il 45% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 50%
+                   Valore minimo [mH]:         0.1
+118                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 45% e il 50% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 32 di Pag. 43
+
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 55%
+                   Valore minimo [mH]:         0.1
+119                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 50% e il 55% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 60%
+                   Valore minimo [mH]:         0.1
+120                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 55% e il 60% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 65%
+                   Valore minimo [mH]:         0.1
+121                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 60% e il 65% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 70%
+                   Valore minimo [mH]:         0.1
+122                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 65% e il 70% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 33 di Pag. 43
+
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 75%
+                   Valore minimo [mH]:         0.1
+123                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 70% e il 75% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 80%
+                   Valore minimo [mH]:         0.1
+124                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 75% e il 80% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 85%
+                   Valore minimo [mH]:         0.1
+125                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 80% e il 85% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 90%
+                   Valore minimo [mH]:         0.1
+126                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 85% e il 90% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 34 di Pag. 43
+
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 95%
+                   Valore minimo [mH]:         0.1
+127                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 90% e il 95% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+Codice                                           Descrizione
+                   INDUTTANZA ELETTRICA DEL CARICO AL 100%
+                   Valore minimo [mH]:         0.1
+128                Valore massimo [mH]:     1200.0
+                   Valore di default [mH]:       -
+
+Questo parametro imposta l'induttanza elettrica del carico tra il 95% e il 100% della corrente di
+fondo scala del DCCT. Questo parametro permette di inserire un punto della caratteristiche
+corrente-induttanza del carico, garantendo in questo modo le migliori prestazioni per il controllo di
+corrente nel carico.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 35 di Pag. 43
+
+
+Codice                                           Descrizione
+                   COEFFICIENTE DI FEED-FORWARD DI TENSIONE
+                   Valore minimo [%]:         0.00
+129                Valore massimo [%]:      100.00
+                   Valore di default [%]:        -
+
+Questo parametro imposta il coefficiente moltiplicativo per il feed-forward della tensione d'uscita.
+
+
+Codice                                          Descrizione
+                   FATTORE DI NORMALIZZAZIONE ERRORE CORRENTE DCCT
+                   Valore minimo [%]:        0.50
+130                Valore massimo [%]:      20.00
+                   Valore di default [%]:       -
+
+Questo parametro imposta il fattore di normalizzazione per l'errore di corrente del DCCT.
+Impostare, ad esempio, il parametro S130 al 20.00% significa moltiplicare per 5 volte l'errore di
+corrente normalizzato sul fondo scala di corrente del DCCT.
+
+
+Codice                                           Descrizione
+                   TEMPO PER LA RAMPA DI SPEGNIMENTO
+                   Valore minimo [ms]:         5.0
+132                Valore massimo [ms]:     2000.0
+                   Valore di default [ms]:       -
+
+Questo parametro imposta il tempo necessario al controllo del convertitore per portare la corrente
+d'uscita con rampa di discesa dal 100.0% allo 0.0% (in valore assoluto) prima di andare fuori
+marcia.
+
+
+Codice                                            Descrizione
+                   TRIGGER PER IL RIFERIMENTO DI CORRENTE
+                   Valore minimo [n]:             0
+133                Valore massimo [n]:            1
+                   Valore di default [n]:         -
+
+Questo parametro invia il trigger per attuare il riferimento di corrente impostato in S100.
+
+
+
+
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                     DOCUMENTAZIONE SOFTWARE
+
+
+      Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 36 di Pag. 43
+
+
+     5.2         Descrizione dei dati reali
+
+     I dati reali dei due regolatori sono disponibili in 7 comandi brevi così organizzati:
+
+
+     5.2.1           Comando breve 1 di 16 words
+
+Variabile (16 bits)                       Descrizione
+VDCLINK                                   R00 Tensione sul DC-Link [V]
+IU_A                                      R01 Corrente d'uscita IU – Fase 1 [A]
+IV_A                                      R02 Corrente d'uscita IV – Fase 2 [A]
+TENSOUT                                   R03 Tensione d'uscita [V]
+IOUTDCCT                                  R04 Corrente d'uscita del DCCT (32bit) [A]
+
+SETIOUTDCCT                               R06 Riferimento per la corrente d'uscita del DCCT (32bit) [A]
+
+SETIOUTDCCTRAW                            R08 Riferimento per la corrente d'uscita del DCCT prima del trigger(32bit) [A]
+
+INOUTPUTS                                 R10 Ingressi ed uscite digitali
+STATO                                     R11 Allarmi convertitore 1
+
+                                          Bit 0 – Allarme scheda driver – MPO della gamba U
+                                          Bit 1 – Allarme scheda driver – MPO della gamba V
+                                          Bit 2 – Allarme di sovracorrente – Gamba U
+                                          Bit 3 – Allarme di sovracorrente – Gamba V
+                                          Bit 4 – Allarme scheda driver OKV
+                                          Bit 5 – Allarme di sovracorrente generale
+                                          Bit 6 – Allarme scheda driver OVT
+                                          Bit 7 – NON USATO
+                                          Bit 8 – NON USATO
+                                          Bit 9 – Allarme comunicazione tra R16R e scheda interfaccia DCCT (SPIB KO)
+                                          Bit 10 – Allarme per protezione termica sulle gambe del convertitore
+                                          Bit 11 – Allarme sulla comunicazione CAN
+                                          Bit 12 – Allarme di sovra-temperatura del convertitore
+                                          Bit 13 – Allarme tensione del DC-Link minore di S70
+                                          Bit 14 – Allarme tensione del DC-Link maggiore di S72
+                                          Bit 15 – Allarme generico della scheda driver
+
+STATOEXT                                  R12 Allarmi convertitore 2
+
+                                          Bit 0 – Allarme squilibrio di corrente tra corrente di gamba U e V
+                                          Bit 1 – Allarme Crowbar
+                                          Bit 2 – Allarme sovracorrente software (vedi S75)
+                                          Bit 3 – NON USATO
+                                          Bit 4 – Allarme di corrente di dispersione verso terra troppo alta
+                                          Bit 5 – Allarme per numero software della CPLD errato
+                                          Bit 6 – Allarme per errore di corrente del DCCT troppo alto
+                                          Bit 7 – NON USATO
+                                          Bit 8 – Allarme aggiornamento firmware R16R
+                                          Bit 9 – NON USATO
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                       DOCUMENTAZIONE SOFTWARE
+
+
+         Cod. Documento : W39ND03890                                             Data di Emissione : 29/09/2018                                             Pag. 37 di Pag. 43
+
+                                            Bit 10 – NON USATO
+                                            Bit 11 – NON USATO
+                                            Bit 12 – NON USATO
+                                            Bit 13 – NON USATO
+                                            Bit 14 – NON USATO
+                                            Bit 15 – NON USATO
+
+CPLD_NUMBER                                 R13 Codice del software installato sulla CPLD
+PGM_NUMBER                                  R14 Codice del software installato sulla DSP
+FLASH_CRC                                   R15 DSP Flash CRC
+TEMPGAMBAV_C                                R16 Temperatura della gamba V [°C]
+TEMPGAMBAW_C                                R17 Temperatura della gamba W [°C]
+IV_1A                                       R18 Corrente d'uscita IU con un solo punto decimale – Gamba V [A]
+IW_1A                                       R19 Corrente d'uscita IV con un solo punto decimale – Gamba W [A]
+IOUTDCCT_1A                                 R20 Corrente d'uscita del DCCT con un solo punto decimale [A]
+RIFTENSOUT                                  R21 Riferimento di tensione di uscita [V]
+A11MDATO                                    R22 Codice di allarme per display 7 segmenti (vedi capitolo CODICI ALLARMI)
+TEMPMAX                                     R23 Temperatura massima rilevata nel convertitore [°C]
+
+
+     5.2.2             Comando breve 2 di 16 words
+
+Variabile (16 bits)                         Descrizione
+UINTNMTCNT                                  R24 Contatore messaggi NMT (CO1) – NON USATO
+GUARDRXCNT                                  R25 Contatore messaggi GUARD TIME RX (CO) – NON USATO
+GUARDTXCNT                                  R26 Contatore messaggi GUARD TIME TX (CO) – NON USATO
+SDORXCNT                                    R27 Contatore messaggi SDO RX (CO) – NON USATO
+SDOTXCNT                                    R28 Contatore messaggi SDO TX (CO) – NON USATO
+PDO1RXCNT                                   R29 Contatore messaggi PDO1 RX (CO) – NON USATO
+PDO2RXCNT                                   R30 Contatore messaggi PDO2 RX (CO) – NON USATO
+PDO3RXCNT                                   R31 Contatore messaggi PDO3 RX (CO) – NON USATO
+PDO4RXCNT                                   R32 Contatore messaggi PDO4 RX (CO) – NON USATO
+PDO1TXCNT                                   R33 Contatore messaggi PDO1 TX (CO) – NON USATO
+PDO2TXCNT                                   R34 Contatore messaggi PDO2 TX (CO) – NON USATO
+PDO3TXCNT                                   R35 Contatore messaggi PDO3 TX (CO) – NON USATO
+PDO4TXCNT                                   R36 Contatore messaggi PDO4 TX (CO) – NON USATO
+SYNCRXCNT                                   R37 Contatore messaggi SYNC (CO) – NON USATO
+EMCYTXCNT                                   R38 Contatore messaggi EMCY (CO) – NON USATO
+NMTSTATE                                    R39 Stato della macchina a stati CO – NON USATO
+CMDDACAN                                    R40 Comandi da CAN
+MAXSLPCURCN                                 R41 Massima pendenza impostata sul riferimento di corrente
+COLORIA11M                                  R42 Codice colori per i LED del frontalino
+INPUTS                                      R43 Stato degli ingressi digitali
+OUTPUTS                                     R44 Stato delle uscite digitali
+MERKER1                                     R45 Stato del convertitore DC/DC - 1
+MERKER2                                     R46 Stato del convertitore DC/DC - 2
+MERKER3                                     R47 Stato del convertitore DC/DC - 3
+
+
+
+     1
+           CO è l'acronimo del protocollo CAN-Open
+         Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                   Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                     DOCUMENTAZIONE SOFTWARE
+
+
+      Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 38 di Pag. 43
+
+     5.3.3 Comando breve 3 di 16 words
+
+Variabile (16 bits)                       Descrizione
+TIM1INTTCKS                               R48 Contatore sull'esecuzione dell'interrupt TIMER1
+CPUTIM1OC                                 R49 Occupazione CPU dell'interrupt TIMER1 [%]
+ECAP1INTCNT                               R50 Contatore sull'esecuzione dell'interrupt CAP1 – NON USATO
+CAP1PEDGE                                 R51 Stato del contatore del CAP1
+ADC1INTCNT                                R52 Contatore sull'esecuzione dell'interrupt ADC1
+ADC1INTTICK                               R53 Durata dell'interrupt ADC1 [tick]
+                                          R54
+ADC1INTOCC                                R55 Occupazione CPU dell'interrupt ADC1 [%]
+CLA1TASKCNT                               R56 Contatore sull'esecuzione dell'interrupt TIMER1
+                                          R57
+I2CINTCNT                                 R58 Contatore sull'esecuzione della comunicazione con l'EEPROM
+I2CERRSRCINT                              R59 Contatore degli errori nella comunicazione con l'EEPROM
+NACK_CNT                                  R60 Contatore dei NACK nella comunicazione con l'EEPROM
+INTE2E3FILT                               R61 Valore normalizzato e filtrato del segnale E2E3 (lettura della corrente verso
+                                          terra)
+LINL0INTCNT                               R62 Contatore sull'esecuzione della comunicazione con il display
+LINL0ERRINTCNT                            R63 Contatore degli errori nella comunicazione con il display
+REFCORR                                   R64 Corrente normalizzata della corrente di riferimento (32bit)
+                                          R65
+IOUTDCCT                                  R66 Corrente normalizzata della corrente letta dal DCCT (32bit)
+                                          R67
+IU                                        R68 Valore normalizzato del segnale IU – NON USATO
+IV                                        R69 Valore normalizzato del segnale IV (corrente di gamba)
+IW                                        R70 Valore normalizzato del segnale IW – NON USATO
+AUX                                       R71 Valore normalizzato del segnale AUX (tensione d'uscita)
+
+
+     5.3.4 Comando breve 4 di 16 words
+
+Variabile (16 bits)                       Descrizione
+E0E1                                      R72 Valore normalizzato del segnale E0E1 – NON USATO
+E2E3                                      R73 Valore normalizzato del segnale E2E3 (lettura della corrente verso terra)
+TMP_V                                     R74 Valore normalizzato del segnale TMP_V (temperatura gamba V)
+TMP_W                                     R75 Valore normalizzato del segnale TMP_W (temperatura gamba W)
+E4                                        R76 Valore normalizzato del segnale E4 – NON USATO
+E5                                        R77 Valore normalizzato del segnale E5 – NON USATO
+VB                                        R78 Valore normalizzato del segnale VB (tensione del DC-Link)
+INTVBFILT                                 R79 Valore normalizzato e filtrato del segnale VB (tensione del DC-Link)
+ANA0                                      R80 Conversione dell'ADC del segnale ANA0
+ANA1                                      R81 Conversione dell'ADC del segnale ANA1
+ANA2                                      R82 Conversione dell'ADC del segnale ANA2
+ANA3                                      R83 Conversione dell'ADC del segnale ANA3
+ANA4                                      R84 Conversione dell'ADC del segnale ANA4
+ANA5                                      R85 Conversione dell'ADC del segnale ANA5
+ANA6                                      R86 Conversione dell'ADC del segnale ANA6
+ANA7                                      R87 Conversione dell'ADC del segnale ANA7
+ANB0                                      R88 Conversione dell'ADC del segnale ANB0
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                     DOCUMENTAZIONE SOFTWARE
+
+
+     Cod. Documento : W39ND03890                                               Data di Emissione : 29/09/2018                                             Pag. 39 di Pag. 43
+
+ANB1                                      R89 Conversione dell'ADC del segnale ANB1
+ANB2                                      R90 Conversione dell'ADC del segnale ANB2
+ANB3                                      R91 Conversione dell'ADC del segnale ANB3
+ANB4                                      R92 Conversione dell'ADC del segnale ANB4
+ANB5                                      R93 Conversione dell'ADC del segnale ANB5
+ANB6                                      R94 Conversione dell'ADC del segnale ANB6
+ANB7                                      R95 Conversione dell'ADC del segnale ANB7
+
+
+     5.3.5 Comando breve 5 di 16 words
+
+Variabile (16 bits)                       Descrizione
+DBGCOOBJ                                  R96 Valore utilizzato per il debug del CO – NON USATO
+                                          R97
+MAXDLTONDCLNK                             R98 Massima pendenza possibile con la tensione d'ingresso attuale (32bit)
+                                          R99
+RX_SPIB_DATA_0                            R100 Dato ricevuto nella prima word del messaggio SPIB (comunicazione con
+                                          scheda di interfaccia del DCCT)
+RX_SPIB_DATA_1                            R101 Dato ricevuto nella seconda word del messaggio SPIB (comunicazione con
+                                          scheda di interfaccia del DCCT)
+RX_SPIA_DATA_0                            R102 Dato ricevuto nella prima word del messaggio SPIA – NON USATO
+RX_SPIA_DATA_1                            R103 Dato ricevuto nella prima word del messaggio SPIA – NON USATO
+LNGREFCORR                                R104 Riferimento di corrente normalizzato (32bit)
+                                          R105
+ADVALUE                                   R106 Valore digitale del DCCT senza alcun condizionamento
+                                          R107
+LLOAD                                     R108 Valore di induttanza utilizzata nel controllo
+DSPPOINTER                                R109 Parola per debug software
+DSPDATA                                   R110 Parola per debug software
+SPIARXFINTCNT                             R111 Contatore sull'esecuzione dell'interrupt SPIA
+SPIBERRRX                                 R112 Contatore degli errori nella comunicazione SPIB
+SPIBMESSOK                                R113 Contatore dei messaggi ricevuti correttamente nella comunicazione SPIB
+PWMIUAPRC                                 R114 Percentuale di modulazione nella PWMUA – NON USATO
+PWMIUBPRC                                 R115 Percentuale di modulazione nella PWMUB – NON USATO
+PWMIVAPRC                                 R116 Percentuale di modulazione nella PWMVA
+PWMIVBPRC                                 R117 Percentuale di modulazione nella PWMVB
+MAXSLOPECUR                               R118 Massima pendenza permessa al riferimento di corrente (32bit)
+                                          R119
+
+
+
+
+     5.3.6 Comando breve 6 di 16 words
+
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                     DOCUMENTAZIONE SOFTWARE
+
+
+     Cod. Documento : W39ND03890                                               Data di Emissione : 29/09/2018                                             Pag. 40 di Pag. 43
+
+Variabile (16 bits)                       Descrizione
+REFDCCT                                   R120 Riferimento di corrente per il DCCT [%]
+FDBDCCT                                   R121 Feedback di corrente del DCCT [%]
+OUTPIDCCT                                 R122 Uscita del regolatore di corrente del DCCT [%]
+FFWDRES                                   R123 Feed-Forward di tensione per la parte resistiva del carico [%]
+FFWDIND                                   R124 Feed-Forward di tensione per la parte induttiva del carico [%]
+FFWDTOT                                   R125 Feed-Forward di tensione complessivo [%]
+SETTNSFWD                                 R126 Riferimento di tensione dovuto al Feed-Forward di tensione complessivo [%]
+REFTNSOUT                                 R127 Riferimento di tensione uscita del convertitore [%]
+FDBTNSOUT                                 R128 Feedback di tensione uscita del convertitore [%]
+OUTPITOUT                                 R129 Uscita del regolatore di tensione di uscita [%]
+IUCORRREF                                 R130 Riferimento di corrente di gamba U [%] - NON USATO
+IU                                        R131 Feedback di corrente di gamba U [%] - NON USATO
+IUFILT                                    R132 Feedback di corrente filtrato di gamba U [%] - NON USATO
+OUTPICORU                                 R133 Uscita del regolatore di corrente di gamba U [%] - NON USATO
+PWM1CMPA                                  R134 Duty-Cycle per il modulatore PWM1A [tick] - NON USATO
+PWM1CMPB                                  R135 Duty-Cycle per il modulatore PWM1B [tick] - NON USATO
+IVCORRREF                                 R136 Riferimento di corrente di gamba V [%]
+IV                                        R137 Feedback di corrente di gamba V [%]
+IVFILT                                    R138 Feedback di corrente filtrato di gamba V [%]
+OUTPICORV                                 R139 Uscita del regolatore di corrente di gamba V [%]
+PWM2CMPA                                  R140 Duty-Cycle per il modulatore PWM2A [tick]
+PWM2CMPB                                  R141 Duty-Cycle per il modulatore PWM2B [tick]
+DCLNKCMP                                  R142 Fattore correttivo per la tensione di DC-Link [%]
+DELTAIVIW                                 R143 Differenza tra le correnti di gamba [%] - NON USATO
+
+
+     5.3.7 Comando breve 7 di 16 words
+
+Variabile (16 bits)
+                Descrizione
+REFSPIABEFNORM  R144 Riferimento di corrente da SPIA (32bit) – NON USATO
+                R145
+IREFDCCT        R146 Riferimento di corrente con una cifra decimale [A]
+VOUTMAXTHEOR    R147 Tensione d'uscita massima teorica imponibile dal convertitore [V]
+VOUTMAXLIM      R148 Tensione d'uscita massima limitata dal convertitore [V]
+ABSVIND         R149 Tensione sull'induttanza in valore assoluto
+CORRDCCTVERYSL R150 Corrente normalizzata letta da DCCT filtrata con costante di tempo elevata
+OW              (usato per taratura offset) (32bit)
+                R151
+FWVERSION       R152 Versione Firmware
+MUXMESSCNT      R153 Contatore sulla comunicazione tra R16R e scheda driver
+CLKSERMACDATAIN R154 Dato ricevuto dalla comunicazione tra R16R e scheda driver
+CLKSERMACMESSC R155 Numero del messaggio ricevuto dalla comunicazione tra R16R e scheda
+NT              driver
+STATOCLKSER_MAC R156 Stato della comunicazione tra R16R e scheda driver
+UINTPERIODATTUV R157 Semiperiodo della PWM [tick]
+ERRNORM         R158 Errore di corrente istantaneo normalizzato rispetto al parametro S130
+ERRNORMFLT      R159 Errore di corrente filtrato normalizzato rispetto al parametro S130
+MUXRXINALLARMS  R160 Allarmi presenti nella scheda driver
+MUXRXINPGMNO    R161 Numero identificativo del programma installato nella scheda driver
+       Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                                 Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                                  DOCUMENTAZIONE SOFTWARE
+
+
+   Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 41 di Pag. 43
+
+MUXRXINPGMCRC                          R162 CRC del programma installato nella scheda driver
+IEARTHREAD                             R163 Corrente verso terra misurata [mA]
+MAXSLOPECURRCA                         R164 Massima pendenza del riferimento di corrente inviato da CAN
+NLIM
+SETVENT                                R165 Riferimento di velocità per il ventilatore
+LOADENERGYINST                         R166 Energia attualmente immagazzinata nell'induttore (32bit) [J]
+                                       R167
+
+
+
+
+    Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                              Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                               DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                              Data di Emissione : 29/09/2018                                             Pag. 42 di Pag. 43
+
+
+5.3        Descrizione allarmi
+
+Gli allarmi del convertitore DC/DC sono suddivisi in due word da 16bit (R11 e R12). Di seguito
+sono descritti i significati dei bit delle parole di allarme e i codici visualizzati nel display 7 segmenti
+del convertitore.
+
+5.3.1 Descrizione allarmi della 1a Word
+
+  Bit                Nome                                                                  Descrizione
+   0                 MP_U                                         Allarme scheda driver – MPO della gamba U
+   1                 MP_V                                         Allarme scheda driver – MPO della gamba V
+   2                IMAX_U                                        Allarme di sovracorrente – Gamba U
+   3                IMAX_V                                        Allarme di sovracorrente – Gamba V
+   4                   OKV                                        Allarme scheda driver OKV
+   5                  IMAX                                        Allarme di sovracorrente generale
+   6                   OVT                                        Allarme scheda driver OVT
+   7                    -                                         NON USATO
+   8                    -                                         NON USATO
+   9              SPIB_KO                                         Allarme comunicazione tra R16R e scheda interfaccia
+  10           PROTEZTERMICAIUV                                   Allarme per protezione termica sulle gambe del convertitore
+  11              CAN_RX_KO                                       Allarme sulla comunicazione CAN
+  12             PROT_NTC_SW                                      Allarme di sovra-temperatura del convertitore
+  13                DC_MIN                                        Allarme tensione del DC-Link minore di S70
+  14                DC_MAX                                        Allarme tensione del DC-Link maggiore di S72
+  15               ALL_MAC                                        Allarme generico della scheda driver
+
+
+5.3.2 Descrizione allarmi della 2a Word
+
+  Bit                 Nome                               Descrizione
+   0              ALLSQUILLIVIW
+                              Allarme squilibrio di corrente tra corrente di gamba U e V
+   1             ALLRUNCROWBARAllarme Crowbar
+   2                 IMAXSW   Allarme sovracorrente software (vedi S75)
+   3                          NON USATO
+   4            EARTHFAULT    Allarme di corrente di dispersione verso terra troppo alta
+   5         MACHNUMBERERROR Allarme per numero software della CPLD errato
+   6         DCCTCONTROLERROR Allarme per errore di corrente del DCCT troppo alto
+   7                  -       NON USATO
+   8             ALLINPROG    Allarme aggiornamento firmware R16R
+   9                  -       NON USATO
+  10                  -       NON USATO
+  11                  -       NON USATO
+  12                  -       NON USATO
+  13                  -       NON USATO
+  14                  -       NON USATO
+  15                  -       NON USATO
+
+
+5.3.3 Codice allarmi per display 7 segmenti
+ Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                           Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+                                                              DOCUMENTAZIONE SOFTWARE
+
+
+Cod. Documento : W39ND03890                                             Data di Emissione : 29/09/2018                                             Pag. 43 di Pag. 43
+
+
+ Codice                      Nome                                                               Descrizione
+   10                        MP_U                                        Allarme scheda driver – MPO della gamba U
+   11                        MP_V                                        Allarme scheda driver – MPO della gamba V
+   12                       IMAX_U                                       Allarme di sovracorrente – Gamba U
+   13                       IMAX_V                                       Allarme di sovracorrente – Gamba V
+   14                          OKV                                       Allarme scheda driver OKV
+   15                         IMAX                                       Allarme di sovracorrente generale
+   16                          OVT                                       Allarme scheda driver OVT
+   17                           -                                        NON USATO
+   18                           -                                        NON USATO
+   19                     SPIB_KO                                        Allarme comunicazione tra R16R e scheda interfaccia
+   1A                  PROTEZTERMICAIUV                                  Allarme per protezione termica sulle gambe del
+                                                                         convertitore
+     1B                       CAN_RX_KO                                  Allarme sulla comunicazione CAN
+     1C                      PROT_NTC_SW                                 Allarme di sovra-temperatura del convertitore
+     1D                         DC_MIN                                   Allarme tensione del DC-Link minore di S70
+     1E                        DC_MAX                                    Allarme tensione del DC-Link maggiore di S72
+     1F                        ALL_MAC                                   Allarme generico della scheda driver
+
+ Codice                      Nome                            Descrizione
+   20                    ALLSQUILLIVIW
+                                     Allarme squilibrio di corrente tra corrente di gamba U e V
+   21                   ALLRUNCROWBARAllarme Crowbar
+   22                       IMAXSW   Allarme sovracorrente software (vedi S75)
+   23                                NON USATO
+   24                  EARTHFAULT    Allarme di corrente di dispersione verso terra troppo alta
+   25               MACHNUMBERERROR Allarme per numero software della CPLD errato
+   26               DCCTCONTROLERROR Allarme per errore di corrente del DCCT troppo alto
+   27                        -       NON USATO
+   28                   ALLINPROG    Allarme aggiornamento firmware R16R
+   29                        -       NON USATO
+   2A                        -       NON USATO
+   2B                        -       NON USATO
+   2C                        -       NON USATO
+   2D                        -       NON USATO
+   2E                        -       NON USATO
+   2F                        -       NON USATO
+
+
+
+
+Il contenuto del presente documento e gli eventuali allegati sono di proprietà della EEI Equipaggiamenti Elettronici Industriali S.r.l. che si riserva ogni diritto sancito dalle Leggi.
+                          Senza approvazione scritta ne è vietata la riproduzione, anche parziale, e terzi non possono esserne informati del contenuto.
+

@@ -75,10 +75,14 @@ Parameters:
 
 ### PV Prefix
 
-Default PV prefix is `EEI:PS01`. To change it, edit the dbLoadRecords line in `st.cmd`:
+To change the PV prefix, edit the `dbLoadRecords` lines in `st.cmd` (both the base template and the
+UNIMAG template must use the same prefix), and the `seq` line that starts the SNL program:
 
 ```
-dbLoadRecords("$(TOP)/db/eei_ps.template","P=YOUR:PREFIX,PORT=EEI_HOLDING")
+dbLoadRecords("../../db/eei_ps.template","P=YOUR:PREFIX,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR")
+dbLoadRecords("../../db/eei_ps_unimag.template","P=YOUR:PREFIX,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR")
+...
+seq unimagEEIControl, "P=YOUR:PREFIX"
 ```
 
 ## Running the IOC
@@ -100,11 +104,13 @@ chmod +x st.cmd
 | `$(P):CMD_GLOBAL_OFF` | mbbo | Global Off command | 0-1 |
 | `$(P):CMD_RESET` | mbbo | Reset faults | 0-1 |
 | `$(P):CMD_START_RAMP` | mbbo | Start current ramp | 0-1 |
-| `$(P):CMD_POLARITY_POS` | mbbo | Set positive polarity | 0-1 |
-| `$(P):CMD_POLARITY_NEG` | mbbo | Set negative polarity | 0-1 |
-| `$(P):CMD_CONTACTORS_OPEN` | mbbo | Open contactors | 0-1 |
-| `$(P):CURR_SET` | ao | Current setpoint (A) | 0-330 |
-| `$(P):CURR_SET_SIGN` | mbbo | Current sign | 0=Pos, 1=Neg |
+| `$(P):CMD_POLARITY_POS_REQ` | bo | Request positive polarity (opens contactors, then switches) | 0-1 |
+| `$(P):CMD_POLARITY_NEG_REQ` | bo | Request negative polarity (opens contactors, then switches) | 0-1 |
+| `$(P):CMD_CONTACTORS_OPEN` | bo | Open contactors | 0-1 |
+| `$(P):CURRENT_SP` | ao | **Signed** current setpoint (A) — normal entry point, see [Setting the Current](#setting-the-current) | -330 to 330 |
+| `$(P):CURR_SET_RAW` | ao | Raw hardware magnitude register (unsigned, driven by the SNL program) | 0-330 |
+| `$(P):CURRENT_SP_SIGN` | mbbo | Raw hardware sign register | 0=Pos, 1=Neg |
+| `$(P):STATE_SP` | mbbo | Set power supply state | 0=OFF,1=ON,2=STANDBY,3=RESET |
 | `$(P):RAMP_RATE_SET` | ao | Ramp rate (A/s) | 10-3474 |
 | `$(P):CYCLE_PATTERN_1` | ao | Cycles at set | 0-65535 |
 | `$(P):CYCLE_PATTERN_0` | ao | Cycles at zero | 0-65535 |
@@ -121,10 +127,11 @@ chmod +x st.cmd
 | `$(P):STAT_POLARITY_POS` | bi | Positive polarity active |
 | `$(P):STAT_POLARITY_NEG` | bi | Negative polarity active |
 | `$(P):STAT_CONTACTORS_OPEN` | bi | Contactors open |
-| `$(P):CURR_RB` | ai | Current readback (A) |
-| `$(P):CURR_RB_SIGN` | mbbi | Current sign readback |
+| `$(P):CURRENT_RB` | ai | Current readback (A, unsigned magnitude) |
+| `$(P):CURRENT_RB_SIGN` | mbbi | Current sign readback |
 | `$(P):VOLT_RB` | ai | Voltage readback (V) |
 | `$(P):RAMP_RATE_RB` | ai | Ramp rate readback (A/s) |
+| `$(P):STATE_RB` | mbbi | Decoded power supply state (STANDBY/ON/FAULT) |
 
 ### Fault Monitoring PVs (Read)
 
@@ -213,12 +220,96 @@ Key register ranges:
 
 1. Ensure power supply is powered and connected to network
 2. Verify water cooling is operational
-3. Start the IOC
+3. Start the IOC (this also starts the `unimagEEIControl` SNL program, see below)
 4. Check status: `$(P):STAT_STANDBY` should be 1
-5. Set current setpoint: `caput $(P):CURR_SET <value>`
-6. Set ramp rate: `caput $(P):RAMP_RATE_SET <value>`
-7. Power on: `caput $(P):CMD_POWER_ON 1`
-8. Start ramp: `caput $(P):CMD_START_RAMP 1`
+5. Set ramp rate: `caput $(P):RAMP_RATE_SET <value>`
+6. Set the current setpoint: `caput $(P):CURRENT_SP <value>` (see [Setting the Current](#setting-the-current) — this alone drives power-on, polarity, and ramp start)
+
+### Setting the Current
+
+Current is set through a single **signed** PV, `$(P):CURRENT_SP` (A, positive or negative), defined in
+`psmodbusEEIApp/Db/eei_ps_unimag.template`. This is a soft record with no hardware link — it is monitored
+by the `unimagEEIControl` SNL program (`psmodbusEEIApp/src/unimagEEIControl.st`), which translates the sign
+into a polarity command and writes the magnitude to the raw hardware registers (`$(P):CURR_SET_RAW`,
+`$(P):CURRENT_SP_SIGN`). The IOC's `st.cmd` starts this program with `seq unimagEEIControl, "P=<prefix>"`
+after `iocInit()`.
+
+On every new value of `$(P):CURRENT_SP` the state machine:
+
+1. Determines the requested polarity from the sign of the setpoint.
+2. If the power supply is already in the requested polarity, sets the magnitude directly
+   (powering on first if needed) and starts the ramp — no polarity change needed.
+3. If a polarity change is required:
+   - Ramps the current down to zero first if the supply is powered on and current is above a small
+     threshold (2 A).
+   - Puts the supply into standby (`$(P):CMD_STANDBY`).
+   - Opens the contactors (`$(P):CMD_CONTACTORS_OPEN`), then writes the polarity selector
+     (`$(P):CMD_POLARITY_POS_EXEC` / `$(P):CMD_POLARITY_NEG_EXEC`) — this register is a mutually-exclusive
+     OPEN/POS/NEG selector, so a single write both changes polarity and clears the "open" state atomically.
+     On units in "Triggered" mode (see below), this write alone doesn't take effect until committed, so
+     `$(P):CMD_START_RAMP` is pulsed right after it.
+   - Waits for `$(P):STAT_POLARITY_POS` / `$(P):STAT_POLARITY_NEG` to confirm the switch.
+   - Powers back on (`$(P):CMD_POWER_ON`) and starts the ramp to the requested magnitude
+     (`$(P):CMD_START_RAMP`).
+4. Each waiting step has a timeout (30 s); on timeout the operation is cancelled and the state machine
+   returns to idle. Asserting `$(P):CMD_RESET` at any point also cancels the in-progress operation.
+
+#### Software vs. Triggered mode (contactor-based units)
+
+Per the Modbus map, COMMAND WORD #1 bit 4 (`$(P):CMD_START_RAMP`) is documented as `START_RAMP/TRIGGER` —
+a single, dual-purpose commit signal for pending register writes. Bits 5/6 (`$(P):CMD_CURRENT_MODE_TRIG` /
+`$(P):CMD_CURRENT_MODE_SW`) select a persistent, mutually-exclusive mode (like the polarity bits): in
+**Software** mode, register writes take effect immediately (how most EEI units behave); in **Triggered**
+mode, a pending write — including a contactor-based polarity switch, which otherwise has no commit step of
+its own — only applies once `$(P):CMD_START_RAMP` is pulsed. This only matters for contactor-based units
+(see the sign-bit mechanism below for pulsed-dipole units, which always pulses the trigger regardless).
+
+This is controlled live via `$(P):MODE_SW_ENABLE` (in `eei_ps_unimag.template`), no IOC restart needed:
+writing it applies the corresponding hardware bit (`$(P):CMD_CURRENT_MODE_SW` / `$(P):CMD_CURRENT_MODE_TRIG`)
+immediately via `$(P):MODE_APPLY`, and the SNL program monitors it to decide whether to pulse
+`$(P):CMD_START_RAMP` after a polarity-selector write. The boot-time default is Software mode (`1`);
+override it with the `SW_MODE` db macro on the `eei_ps_unimag.template` load, e.g.:
+
+```
+dbLoadRecords("../../db/eei_ps_unimag.template","P=<prefix>,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,SW_MODE=0")
+```
+
+To test the other mode without rebuilding: `caput <prefix>:MODE_SW_ENABLE 1` (Software) or `0` (Triggered).
+
+#### Polarity mechanism: contactors vs. sign bit (e.g. DHPTB102)
+
+The EEI regulator firmware documentation (`docs/manuals/`) shows two different converter topologies exist
+in this power supply family, each with a completely different polarity mechanism:
+
+- **Quadrupole / normal-dipole regulators** (e.g. QUATB201) switch polarity with physical contactors: this
+  is the `$(P):CMD_POLARITY_POS_EXEC` / `NEG_EXEC` + `$(P):CMD_CONTACTORS_OPEN` sequence described above,
+  confirmed via the `$(P):STAT_POLARITY_POS` / `NEG` contactor-state readbacks.
+- **Pulsed-dipole regulators** (e.g. DHPTB102) use a solid-state H-bridge converter with **no polarity
+  contactors at all** — current is reversed electronically via a sign bit on the current reference
+  (`$(P):CURRENT_SP_SIGN`), committed by the same `$(P):CMD_START_RAMP` trigger used for a magnitude
+  change. `$(P):STAT_POLARITY_POS`/`NEG` reflect a contactor that doesn't exist on this topology and can't
+  be used to confirm a polarity change on it.
+
+This is selected per-IOC via `$(P):CFG_POLARITY_VIA_SIGN` (in `eei_ps_unimag.template`, set with the
+`POLARITY_VIA_SIGN` db macro; default `0` = contactor-based). When set, `unimagEEIControl.st` writes
+`$(P):CURRENT_SP_SIGN` and pulses `$(P):CMD_START_RAMP` directly instead of the contactor sequence, and
+tracks the last-applied polarity internally (`STAT_POLARITY_POS`/`NEG` aren't consulted) since there's no
+hardware confirmation available:
+
+```
+dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,POLARITY_VIA_SIGN=1")
+```
+
+See `iocBoot/psmodbusEEIIOC/st-dhptb102.cmd`.
+
+For manual/low-level control (bypassing the sequencing above), the underlying PVs can still be driven
+directly: `$(P):CURR_SET_RAW` (unsigned magnitude), `$(P):CURRENT_SP_SIGN`, and
+`$(P):CMD_POLARITY_POS_REQ` / `$(P):CMD_POLARITY_NEG_REQ` (which run the contactor-open + polarity-write
+sequence via a `seq` record instead of the SNL program — only meaningful on contactor-based units). This
+is intended for debugging only — normal operation should go through `$(P):CURRENT_SP`.
+
+Overall power supply state can also be read/set via the decoded `$(P):STATE_RB` (STANDBY/ON/FAULT) and
+`$(P):STATE_SP` (OFF/ON/STANDBY/RESET) convenience PVs.
 
 ### Shutdown Sequence
 
@@ -275,10 +366,10 @@ Basic PV tests:
 caget $(P):STAT_WORD1_RB
 
 # Test write capability
-caput $(P):CURR_SET 10
+caput $(P):CURRENT_SP 10
 
 # Monitor current
-camonitor $(P):CURR_RB
+camonitor $(P):CURRENT_RB
 
 # Check all faults
 caget $(P):FAULT_*
