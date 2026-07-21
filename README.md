@@ -254,27 +254,26 @@ On every new value of `$(P):CURRENT_SP` the state machine:
 4. Each waiting step has a timeout (30 s); on timeout the operation is cancelled and the state machine
    returns to idle. Asserting `$(P):CMD_RESET` at any point also cancels the in-progress operation.
 
-#### Software vs. Triggered mode (contactor-based units)
+#### Trigger source: Software vs. Hardware
 
-Per the Modbus map, COMMAND WORD #1 bit 4 (`$(P):CMD_START_RAMP`) is documented as `START_RAMP/TRIGGER` —
-a single, dual-purpose commit signal for pending register writes. Bits 5/6 (`$(P):CMD_CURRENT_MODE_TRIG` /
-`$(P):CMD_CURRENT_MODE_SW`) select a persistent, mutually-exclusive mode (like the polarity bits): in
-**Software** mode, register writes take effect immediately (how most EEI units behave); in **Triggered**
-mode, a pending write — including a contactor-based polarity switch, which otherwise has no commit step of
-its own — only applies once `$(P):CMD_START_RAMP` is pulsed. This only matters for contactor-based units
-(see the sign-bit mechanism below for pulsed-dipole units, which always pulses the trigger regardless).
+The general installation/operation manual (`docs/manuals/170458-INFN-manuale-110319.pdf`, §6.2.4 and
+§8.5.9) clarifies what COMMAND WORD #1 bits 5/6 (`$(P):CMD_CURRENT_MODE_TRIG` / `$(P):CMD_CURRENT_MODE_SW`)
+actually select. The trigger itself (`$(P):CMD_START_RAMP`, documented as `START_RAMP/TRIGGER`) is
+**always required** to commit a new current reference (magnitude and/or sign) — there is no mode where
+writes just take effect on their own. What bits 5/6 select is the trigger's **source**:
 
-This is controlled live via `$(P):MODE_SW_ENABLE` (in `eei_ps_unimag.template`), no IOC restart needed:
-writing it applies the corresponding hardware bit (`$(P):CMD_CURRENT_MODE_SW` / `$(P):CMD_CURRENT_MODE_TRIG`)
-immediately via `$(P):MODE_APPLY`, and the SNL program monitors it to decide whether to pulse
-`$(P):CMD_START_RAMP` after a polarity-selector write. The boot-time default is Software mode (`1`);
-override it with the `SW_MODE` db macro on the `eei_ps_unimag.template` load, e.g.:
+- **Software** (`CMD_CURRENT_MODE_SW`): the trigger comes from the Modbus/EPICS `start_ramp` bit (Remote
+  mode) or the operator-panel button (Local mode) — this is what our `$(P):CMD_START_RAMP` writes drive.
+- **Hardware** (`CMD_CURRENT_MODE_TRIG`): the trigger comes from an external BNC "Trigger input" signal
+  instead — in this mode, **our `$(P):CMD_START_RAMP` writes are silently ignored entirely**, since the
+  manual states the remote/local Start Ramp commands "are not active" while Hardware is selected.
 
-```
-dbLoadRecords("../../db/eei_ps_unimag.template","P=<prefix>,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,SW_MODE=0")
-```
-
-To test the other mode without rebuilding: `caput <prefix>:MODE_SW_ENABLE 1` (Software) or `0` (Triggered).
+Since this IOC only ever writes the trigger via Modbus, Software must always be selected for it to have any
+effect. This is controlled via `$(P):MODE_SW_ENABLE` (in `eei_ps_unimag.template`) — writing it applies the
+corresponding hardware bit immediately via `$(P):MODE_APPLY`. The boot-time default is Software (`1`),
+which is correct for every unit under this IOC's control and should not normally need overriding; the
+`SW_MODE` db macro and live `caput <prefix>:MODE_SW_ENABLE` exist mainly for diagnosing a unit that seems
+to ignore triggered commands entirely (as opposed to just polarity — see below).
 
 #### Polarity mechanism: contactors vs. sign bit (e.g. DHPTB102)
 
@@ -290,11 +289,21 @@ in this power supply family, each with a completely different polarity mechanism
   change. `$(P):STAT_POLARITY_POS`/`NEG` reflect a contactor that doesn't exist on this topology and can't
   be used to confirm a polarity change on it.
 
+This is confirmed by `docs/manuals/170458-INFN-manuale-110319.pdf` §6.2.6.1 ("Alimentatore MPS-F per
+Magneti Fast Dipoli" — the Fast/pulsed-dipole line DHPTB102 belongs to): current inversion is realized by
+the DCDC-F module "without the use of electromechanical devices" and "handled automatically the instant
+the Trigger command is issued" — unlike §6.2.6.2 (MPS-D/MPS-Q, contactor-based), which explicitly
+restricts polarity switching to the Standby state, §6.2.6.1 states no such restriction for the sign-bit
+mechanism; it's just a normal signed current-reference update like any other.
+
 This is selected per-IOC via `$(P):CFG_POLARITY_VIA_SIGN` (in `eei_ps_unimag.template`, set with the
 `POLARITY_VIA_SIGN` db macro; default `0` = contactor-based). When set, `unimagEEIControl.st` writes
 `$(P):CURRENT_SP_SIGN` and pulses `$(P):CMD_START_RAMP` directly instead of the contactor sequence, and
 tracks the last-applied polarity internally (`STAT_POLARITY_POS`/`NEG` aren't consulted) since there's no
-hardware confirmation available:
+hardware confirmation available. The SNL currently still routes this through the same ramp-to-zero →
+standby → power-on cycle used for contactor-based units — per the manual this isn't actually required for
+the sign-bit mechanism, so it's a safe but possibly unnecessary detour; simplifying it to a direct
+in-place update is a possible future optimization, not yet done:
 
 ```
 dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,POLARITY_VIA_SIGN=1")
