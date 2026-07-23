@@ -67,17 +67,32 @@ record(bo, "$(P):CFG_POLARITY_VIA_SIGN")
     field(VAL,  "$(POLARITY_VIA_SIGN=0)")
 }
 
-# ################### Status Readback ####################
-# # Current readback (signed based on polarity)
-# # PV format: $(P):CURRENT_RB
-# record(calcout, "$(P):CURRENT_RB")
-# {
-#     field(DESC, "Current Readback (signed)")
-#     field(INPA, "$(P):CURR_RB CP")
-#     field(CALC, "A")
-#     field(EGU,  "A")
-#     field(PREC, "3")
-# }
+################### Signed Current Readback ####################
+# User-facing readback, signed to match $(P):CURRENT_SP's convention.
+# $(P):CURR_RB_RAW (in eei_ps.template) is the raw Modbus register (40025).
+# Whether it's already signed or needs a separate sign applied depends on
+# the same polarity mechanism used elsewhere (see $(P):CFG_POLARITY_VIA_SIGN
+# above and unimagEEIControl.st):
+#   - Contactor-based (quadrupole/normal-dipole) units: per the Modbus map,
+#     only the DP01/sign-bit spec column labels this register "ABSOLUTE
+#     VALUE" - for this topology it's an unqualified "curr_readout", and in
+#     practice it's a genuinely signed sensor reading already (confirmed
+#     empirically: it reads negative when STAT_POLARITY_NEG is active).
+#     $(P):CURRENT_RB_SIGN also isn't driven by this topology's firmware -
+#     it just sits at its power-on default regardless of actual polarity -
+#     so it must NOT be used to re-sign an already-signed value.
+#   - Sign-bit (pulsed-dipole/H-bridge) units: $(P):CURR_RB_RAW is a true
+#     absolute value here, and $(P):CURRENT_RB_SIGN is the genuine sign.
+record(calc, "$(P):CURRENT_RB")
+{
+    field(DESC, "Current Readback (signed)")
+    field(INPA, "$(P):CURR_RB_RAW CP")
+    field(INPB, "$(P):CURRENT_RB_SIGN CP")
+    field(INPC, "$(P):CFG_POLARITY_VIA_SIGN CP")
+    field(CALC, "C?(B?-A:A):A")
+    field(EGU,  "A")
+    field(PREC, "3")
+}
 
 # Overall status readback - decode state from individual bits
 # PV format: $(P):STATE_RB

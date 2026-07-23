@@ -127,8 +127,9 @@ chmod +x st.cmd
 | `$(P):STAT_POLARITY_POS` | bi | Positive polarity active |
 | `$(P):STAT_POLARITY_NEG` | bi | Negative polarity active |
 | `$(P):STAT_CONTACTORS_OPEN` | bi | Contactors open |
-| `$(P):CURRENT_RB` | ai | Current readback (A, unsigned magnitude) |
-| `$(P):CURRENT_RB_SIGN` | mbbi | Current sign readback |
+| `$(P):CURRENT_RB` | calc | Current readback (A), **signed** — matches `$(P):CURRENT_SP`'s convention. Sign source depends on `CFG_POLARITY_VIA_SIGN`: `CURRENT_RB_SIGN` for sign-bit units, `STAT_POLARITY_NEG` for contactor-based units (see below) |
+| `$(P):CURR_RB_RAW` | ai | Raw hardware magnitude register (unsigned) |
+| `$(P):CURRENT_RB_SIGN` | mbbi | Raw hardware sign register |
 | `$(P):VOLT_RB` | ai | Voltage readback (V) |
 | `$(P):RAMP_RATE_RB` | ai | Ramp rate readback (A/s) |
 | `$(P):STATE_RB` | mbbi | Decoded power supply state (STANDBY/ON/FAULT) |
@@ -297,13 +298,28 @@ restricts polarity switching to the Standby state, §6.2.6.1 states no such rest
 mechanism; it's just a normal signed current-reference update like any other.
 
 This is selected per-IOC via `$(P):CFG_POLARITY_VIA_SIGN` (in `eei_ps_unimag.template`, set with the
-`POLARITY_VIA_SIGN` db macro; default `0` = contactor-based). When set, `unimagEEIControl.st` writes
-`$(P):CURRENT_SP_SIGN` and pulses `$(P):CMD_START_RAMP` directly instead of the contactor sequence, and
-tracks the last-applied polarity internally (`STAT_POLARITY_POS`/`NEG` aren't consulted) since there's no
-hardware confirmation available. The SNL currently still routes this through the same ramp-to-zero →
-standby → power-on cycle used for contactor-based units — per the manual this isn't actually required for
-the sign-bit mechanism, so it's a safe but possibly unnecessary detour; simplifying it to a direct
-in-place update is a possible future optimization, not yet done:
+`POLARITY_VIA_SIGN` db macro; default `0` = contactor-based). When set, `unimagEEIControl.st` skips the
+ramp-to-zero/standby/power-cycle dance entirely (`SET_SIGNED_CURRENT` state) — every setpoint just writes
+`$(P):CURRENT_SP_SIGN` and the magnitude together and pulses `$(P):CMD_START_RAMP`, whether or not polarity
+is actually changing, matching the manual's description that this topology has no Standby restriction and
+handles inversion automatically. Polarity state is tracked internally in the SNL (`STAT_POLARITY_POS`/`NEG`
+aren't consulted) since there's no hardware confirmation available for this topology.
+
+The same split applies to the signed readback, `$(P):CURRENT_RB` (a `calc` record over `$(P):CURR_RB_RAW`,
+register 40025), and it's a genuinely different relationship per topology, not just a different sign
+source:
+- **Sign-bit units**: `CURR_RB_RAW` is a true absolute value here (matches the Modbus map's DP01-column
+  label "ABSOLUTE VALUE"), so the sign is applied from `$(P):CURRENT_RB_SIGN` (a real register for this
+  topology).
+- **Contactor-based units**: `CURR_RB_RAW` is *already a signed sensor reading* — the Modbus map only
+  qualifies this register as "ABSOLUTE VALUE" in the DP01 column; the DH,DC/QUADS columns just say
+  `curr_readout`, unqualified, and empirically it does read negative when `STAT_POLARITY_NEG` is active. So
+  for this topology `CURRENT_RB` must pass `CURR_RB_RAW` through **unchanged** — applying `STAT_POLARITY_NEG`
+  on top of it double-negates and silently flips the sign back to wrong. (`CURRENT_RB_SIGN` is also
+  DP01-spec-only and isn't driven by contactor-based firmware at all — it just sits at its power-on default,
+  which is why it must never be used for this topology either.)
+
+Example of setting `POLARITY_VIA_SIGN` on the `eei_ps_unimag.template` load:
 
 ```
 dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,POLARITY_VIA_SIGN=1")
@@ -377,7 +393,7 @@ caget $(P):STAT_WORD1_RB
 # Test write capability
 caput $(P):CURRENT_SP 10
 
-# Monitor current
+# Monitor current (signed - matches CURRENT_SP's convention)
 camonitor $(P):CURRENT_RB
 
 # Check all faults

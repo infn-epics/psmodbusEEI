@@ -18,11 +18,19 @@ program unimagEEIControl
  *
  * Separately, per the EEI regulator firmware docs, quadrupole/normal-dipole
  * units switch polarity with physical contactors (CMD_POLARITY_POS/NEG_EXEC
- * + CMD_CONTACTORS_OPEN, confirmed via STAT_POLARITY_POS/NEG), while the
- * pulsed-dipole H-bridge regulator has no contactors - it reverses current
- * electronically via a sign bit (CURRENT_SP_SIGN) on the current reference,
- * committed by the same START_RAMP/TRIGGER bit. This is selected per-IOC by
- * "{P}:CFG_POLARITY_VIA_SIGN" (set via the POLARITY_VIA_SIGN db macro).
+ * + CMD_CONTACTORS_OPEN, confirmed via STAT_POLARITY_POS/NEG). This requires
+ * ramping to zero and dropping to standby before the contactors can safely
+ * move, then powering back on - see CHECK_STATE/RAMP_TO_ZERO/GO_STANDBY/
+ * CHANGE_POLARITY/GO_POWERON below.
+ *
+ * The pulsed-dipole H-bridge regulator (e.g. DHPTB102) has no contactors and
+ * is fully bipolar: it reverses current electronically via a sign bit
+ * (CURRENT_SP_SIGN) on the current reference, committed by the same
+ * START_RAMP/TRIGGER bit used for a magnitude change. There is no need to
+ * go to standby or sequence a contactor - every setpoint update just writes
+ * sign + magnitude and pulses START_RAMP/TRIGGER (see SET_SIGNED_CURRENT
+ * below). This is selected per-IOC by "{P}:CFG_POLARITY_VIA_SIGN" (set via
+ * the POLARITY_VIA_SIGN db macro).
  */
 
 option +r;  /* Make reentrant */
@@ -36,7 +44,7 @@ assign current_sp to "{P}:CURRENT_SP";
 monitor current_sp;
 
 double current_rb;
-assign current_rb to "{P}:CURRENT_RB";
+assign current_rb to "{P}:CURR_RB_RAW";
 monitor current_rb;
 
 double curr_set;
@@ -76,6 +84,7 @@ monitor mode_sw_enable;
 
 int polarity_via_sign;
 assign polarity_via_sign to "{P}:CFG_POLARITY_VIA_SIGN";
+monitor polarity_via_sign;
 
 int cmd_contactors_open;
 assign cmd_contactors_open to "{P}:CMD_CONTACTORS_OPEN";
@@ -103,10 +112,6 @@ double requested_current;
 double abs_current;
 int polarity_change_needed;
 int timeout_counter;
-int current_polarity;  /* tracked locally for polarity_via_sign devices,
-                         * since STAT_POLARITY_POS/NEG reflect a physical
-                         * contactor that doesn't exist on those units */
-int polarity_known;    /* becomes 1 once current_polarity reflects reality */
 
 /* Constants */
 #define CURRENT_THRESHOLD 2.0
@@ -128,16 +133,11 @@ ss unimag_control {
                 requested_polarity = POL_NEGATIVE;
             }
             
-            /* Check if polarity change is needed */
+            /* Check if polarity change is needed. Bipolar (polarity_via_sign)
+             * units never need the contactor dance - every setpoint just
+             * writes sign + magnitude and triggers (see CHECK_STATE). */
             if (polarity_via_sign) {
-                /* No contactor status to check on this topology - rely on
-                 * our own record of the last-applied sign instead. */
-                if (!polarity_known || current_polarity != requested_polarity) {
-                    polarity_change_needed = 1;
-                    timeout_counter = 0;
-                } else {
-                    polarity_change_needed = 0;
-                }
+                polarity_change_needed = 0;
             } else {
                 pvGet(stat_polarity_pos);
                 pvGet(stat_polarity_neg);
@@ -166,10 +166,15 @@ ss unimag_control {
             pvGet(current_rb);
         }
         
+        when (polarity_via_sign) {
+            /* Bipolar H-bridge unit: no contactors/standby to sequence -
+             * just write sign + magnitude and trigger. */
+        } state SET_SIGNED_CURRENT
+
         when (!polarity_change_needed) {
             /* No polarity change needed, just set current directly */
         } state SET_CURRENT_DIRECT
-        
+
         when (polarity_change_needed && stat_power_on && fabs(current_rb) > CURRENT_THRESHOLD) {
             /* Need to ramp to zero first */
         } state RAMP_TO_ZERO
@@ -245,25 +250,15 @@ ss unimag_control {
     
     state CHANGE_POLARITY {
         entry {
-            if (polarity_via_sign) {
-                /* H-bridge topology: no contactors - reverse current via
-                 * the sign bit on the current reference, committed by the
-                 * same START_RAMP/TRIGGER bit that commits a magnitude. */
-                curr_sign = (requested_polarity == POL_POSITIVE) ? 0 : 1;
-                pvPut(curr_sign);
-                curr_set = 0.0;
-                pvPut(curr_set);
-                cmd_start_ramp = 1;
-                pvPut(cmd_start_ramp);
-            } else {
-                /* Open contactors first */
-                cmd_contactors_open = 1;
-                pvPut(cmd_contactors_open);
-            }
+            /* Contactor-based units only (bipolar/polarity_via_sign units
+             * are dispatched straight to SET_SIGNED_CURRENT and never reach
+             * this state) - open contactors first. */
+            cmd_contactors_open = 1;
+            pvPut(cmd_contactors_open);
             timeout_counter = 0;
         }
 
-        when (delay(1.0) && !polarity_via_sign) {
+        when (delay(1.0)) {
             /* Change polarity after delay. This register is a mutually-
              * exclusive selector (OPEN/POS/NEG), so a plain write of 1 or 2
              * replaces the whole register, clearing OPEN and the other
@@ -282,10 +277,6 @@ ss unimag_control {
                 pvPut(cmd_start_ramp);
             }
         } state WAIT_POLARITY_DELAY
-
-        when (delay(1.0) && polarity_via_sign) {
-            /* Sign + trigger already sent above; just let it settle. */
-        } state WAIT_POLARITY_DELAY
     }
 
     state WAIT_POLARITY_DELAY {
@@ -295,28 +286,17 @@ ss unimag_control {
 
     state WAIT_POLARITY {
         entry {
-            if (!polarity_via_sign) {
-                pvGet(stat_polarity_pos);
-                pvGet(stat_polarity_neg);
-            }
+            pvGet(stat_polarity_pos);
+            pvGet(stat_polarity_neg);
         }
 
-        when (polarity_via_sign) {
-            /* No contactor status exists on this topology to confirm
-             * against - the sign write + trigger applied synchronously. */
-            current_polarity = requested_polarity;
-            polarity_known = 1;
-            polarity_change_needed = 0;
-        } state GO_POWERON
-
-        when (!polarity_via_sign &&
-              ((requested_polarity == POL_POSITIVE && stat_polarity_pos) ||
-               (requested_polarity == POL_NEGATIVE && stat_polarity_neg))) {
+        when ((requested_polarity == POL_POSITIVE && stat_polarity_pos) ||
+              (requested_polarity == POL_NEGATIVE && stat_polarity_neg)) {
             /* Polarity confirmed */
             polarity_change_needed = 0;
         } state GO_POWERON
 
-        when (!polarity_via_sign && timeout_counter++ >= TIMEOUT_TICKS) {
+        when (timeout_counter++ >= TIMEOUT_TICKS) {
             /* Timeout - cancel operation */
             polarity_change_needed = 0;
             printf("unimagControl: Timeout waiting for polarity change\n");
@@ -326,7 +306,7 @@ ss unimag_control {
             polarity_change_needed = 0;
         } state IDLE
 
-        when (!polarity_via_sign && delay(0.5)) {
+        when (delay(0.5)) {
             /* Keep checking */
             pvGet(stat_polarity_pos);
             pvGet(stat_polarity_neg);
@@ -387,27 +367,37 @@ ss unimag_control {
         entry {
             /* No polarity change needed, check if we need to power on */
             pvGet(stat_power_on);
+            timeout_counter = 0;
         }
-        
+
         when (!stat_power_on) {
             /* Need to power on first */
             cmd_power_on = 1;
             pvPut(cmd_power_on);
         } state WAIT_POWERON_DIRECT
-        
+
         when (stat_power_on) {
             /* Already powered on */
             curr_set = abs_current;
             pvPut(curr_set);
         } state RAMP_DIRECT
     }
-    
+
     state WAIT_POWERON_DIRECT {
         when (stat_power_on) {
             curr_set = abs_current;
             pvPut(curr_set);
         } state RAMP_DIRECT
-        
+
+        when (timeout_counter++ >= TIMEOUT_TICKS) {
+            /* Timeout - don't get stuck here forever, or every future
+             * setpoint would silently be ignored (IDLE never revisited). */
+            printf("unimagControl: Timeout waiting for power on (direct)\n");
+        } state IDLE
+
+        when (efTestAndClear(cmd_reset_ef)) {
+        } state IDLE
+
         when (delay(0.5)) {
             /* Keep checking */
         } state WAIT_POWERON_DIRECT
@@ -421,6 +411,63 @@ ss unimag_control {
     }
     
     state IDLE_DIRECT {
+        when (delay(0.2)) {
+        } state IDLE
+    }
+
+    state SET_SIGNED_CURRENT {
+        entry {
+            /* Bipolar H-bridge unit: reverse current electronically via the
+             * sign bit on the current reference - no contactors, no standby,
+             * no ramp-to-zero. Every setpoint writes sign + magnitude and
+             * commits with the same START_RAMP/TRIGGER bit. */
+            curr_sign = (requested_polarity == POL_POSITIVE) ? 0 : 1;
+            pvPut(curr_sign);
+            pvGet(stat_power_on);
+            timeout_counter = 0;
+        }
+
+        when (!stat_power_on) {
+            /* Need to power on first */
+            cmd_power_on = 1;
+            pvPut(cmd_power_on);
+        } state WAIT_POWERON_SIGNED
+
+        when (stat_power_on) {
+            /* Already powered on */
+            curr_set = abs_current;
+            pvPut(curr_set);
+        } state RAMP_SIGNED
+    }
+
+    state WAIT_POWERON_SIGNED {
+        when (stat_power_on) {
+            curr_set = abs_current;
+            pvPut(curr_set);
+        } state RAMP_SIGNED
+
+        when (timeout_counter++ >= TIMEOUT_TICKS) {
+            /* Timeout - don't get stuck here forever, or every future
+             * setpoint would silently be ignored (IDLE never revisited). */
+            printf("unimagControl: Timeout waiting for power on (signed)\n");
+        } state IDLE
+
+        when (efTestAndClear(cmd_reset_ef)) {
+        } state IDLE
+
+        when (delay(0.5)) {
+            /* Keep checking */
+        } state WAIT_POWERON_SIGNED
+    }
+
+    state RAMP_SIGNED {
+        when (delay(0.5)) {
+            cmd_start_ramp = 1;
+            pvPut(cmd_start_ramp);
+        } state IDLE_SIGNED
+    }
+
+    state IDLE_SIGNED {
         when (delay(0.2)) {
         } state IDLE
     }

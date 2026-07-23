@@ -346,6 +346,9 @@ record(ai, "$(P):STAT_WORD2_RB")
 }
 
 ################### Ramp Rate Active (Register 40024 / 0x17) - Read ####################
+# Plain 16-bit unsigned integer per the Modbus map ("A/s - 16 Bit unsigned"),
+# same as $(P):RAMP_RATE_SET (register 40005) - no ASLO scaling, unlike the
+# temperature/diagnostic registers below which are genuinely in tenths (XXX.X).
 record(ai, "$(P):RAMP_RATE_RB")
 {
     field(DTYP, "asynInt32")
@@ -355,15 +358,17 @@ record(ai, "$(P):RAMP_RATE_RB")
     field(PREC, "0")
     field(SCAN, "I/O Intr")
     field(HOPR, "3474")
-    field(ASLO, "0.1")
 }
 
 ################### Real Current (Register 40025 / 0x18) - Read ####################
-record(ai, "$(P):CURRENT_RB")
+# Raw hardware magnitude register (unsigned). Not for direct operator use -
+# the signed, operator-facing readback is $(P):CURRENT_RB in
+# eei_ps_unimag.template, which combines this with $(P):CURRENT_RB_SIGN.
+record(ai, "$(P):CURR_RB_RAW")
 {
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT) 24 $(TIMEOUT=1000))MODBUS_DATA")
-    field(DESC, "Current Readback (Absolute)")
+    field(DESC, "Current Readback (raw magnitude)")
     field(EGU,  "A")
     field(PREC, "3")
     field(ASLO, "0.001")
