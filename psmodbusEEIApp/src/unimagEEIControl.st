@@ -24,19 +24,41 @@ program unimagEEIControl
  * CHANGE_POLARITY/GO_POWERON below.
  *
  * The pulsed-dipole H-bridge regulator (e.g. DHPTB102) has no contactors and
- * is fully bipolar: it reverses current electronically via a sign bit
- * (CURRENT_SP_SIGN) on the current reference, committed by the same
- * START_RAMP/TRIGGER bit used for a magnitude change. There is no need to
- * go to standby or sequence a contactor - every setpoint update just writes
- * sign + magnitude and pulses START_RAMP/TRIGGER (see SET_SIGNED_CURRENT
- * below). This is selected per-IOC by "{P}:CFG_POLARITY_VIA_SIGN" (set via
- * the POLARITY_VIA_SIGN db macro).
+ * is fully bipolar. There is no need to go to standby or sequence a
+ * contactor - every setpoint update just writes the current reference and
+ * pulses START_RAMP/TRIGGER (see SET_SIGNED_CURRENT below). This is
+ * selected per-IOC by "{P}:CFG_POLARITY_VIA_SIGN" (set via the
+ * POLARITY_VIA_SIGN db macro).
+ *
+ * Confirmed empirically (not just from documentation) that on this
+ * topology, registers 40003-40004 (CURR_SET_RAW / CURRENT_SP_SIGN in
+ * eei_ps.template) are actually a single 32-bit two's-complement current
+ * reference at the wire level, not separate magnitude+sign fields as their
+ * names/the Modbus map's column labels suggest: writing plain magnitude +
+ * a 0/1 sign flag produces a large, wrong positive value for negative
+ * setpoints (e.g. -1A firmware-reassembled as +66.536A, from
+ * high_word=1, low_word=1000 -> 1*65536+1000). currentToRaw32() below
+ * computes the correct 32-bit two's-complement split, written via the raw
+ * CURR_SET_RAW32_LO/HI registers instead. This also matters for large
+ * *positive* currents on this topology - e.g. above 65.535A - which
+ * likewise don't fit in a single 16-bit word.
  */
 
 option +r;  /* Make reentrant */
 
 /* C declarations */
 %% #include <math.h>
+
+/* Splits a signed current in Amps into the 32-bit two's-complement raw
+ * low/high words expected by the sign-bit/bipolar topology's combined
+ * current-reference registers (see file header comment). */
+%% static void currentToRaw32(double current_amps, int *lo, int *hi)
+%% {
+%%     int raw32 = (int)(current_amps * 1000.0 +
+%%                        (current_amps >= 0 ? 0.5 : -0.5));
+%%     *lo = raw32 & 0xFFFF;
+%%     *hi = (raw32 >> 16) & 0xFFFF;
+%% }
 
 /* PV declarations */
 double current_sp;
@@ -50,8 +72,11 @@ monitor current_rb;
 double curr_set;
 assign curr_set to "{P}:CURR_SET_RAW";
 
-int curr_sign;
-assign curr_sign to "{P}:CURRENT_SP_SIGN";
+int curr_set_raw32_lo;
+assign curr_set_raw32_lo to "{P}:CURR_SET_RAW32_LO";
+
+int curr_set_raw32_hi;
+assign curr_set_raw32_hi to "{P}:CURR_SET_RAW32_HI";
 
 int stat_polarity_pos;
 assign stat_polarity_pos to "{P}:STAT_POLARITY_POS";
@@ -418,11 +443,13 @@ ss unimag_control {
     state SET_SIGNED_CURRENT {
         entry {
             /* Bipolar H-bridge unit: reverse current electronically via the
-             * sign bit on the current reference - no contactors, no standby,
-             * no ramp-to-zero. Every setpoint writes sign + magnitude and
-             * commits with the same START_RAMP/TRIGGER bit. */
-            curr_sign = (requested_polarity == POL_POSITIVE) ? 0 : 1;
-            pvPut(curr_sign);
+             * 32-bit two's-complement current reference - no contactors, no
+             * standby, no ramp-to-zero. Write the complete signed reference
+             * up front (see currentToRaw32, file header); only power-on is
+             * state-dependent from here. */
+            currentToRaw32(requested_current, &curr_set_raw32_lo, &curr_set_raw32_hi);
+            pvPut(curr_set_raw32_lo);
+            pvPut(curr_set_raw32_hi);
             pvGet(stat_power_on);
             timeout_counter = 0;
         }
@@ -434,16 +461,13 @@ ss unimag_control {
         } state WAIT_POWERON_SIGNED
 
         when (stat_power_on) {
-            /* Already powered on */
-            curr_set = abs_current;
-            pvPut(curr_set);
+            /* Already powered on, reference already written above */
         } state RAMP_SIGNED
     }
 
     state WAIT_POWERON_SIGNED {
         when (stat_power_on) {
-            curr_set = abs_current;
-            pvPut(curr_set);
+            /* Reference already written in SET_SIGNED_CURRENT's entry */
         } state RAMP_SIGNED
 
         when (timeout_counter++ >= TIMEOUT_TICKS) {

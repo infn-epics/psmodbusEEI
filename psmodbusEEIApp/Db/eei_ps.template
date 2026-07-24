@@ -166,6 +166,18 @@ record(ao, "$(P):POLARITY_CTRL")
 # Raw hardware magnitude register (unsigned). Not for direct operator use -
 # the signed, operator-facing setpoint is $(P):CURRENT_SP in eei_ps_unimag.template,
 # which the SNL program (unimagEEIControl.st) translates into polarity + this magnitude.
+#
+# NOTE: on the sign-bit/bipolar (H-bridge) topology, this record is NOT
+# appropriate for writing a setpoint - see CURR_SET_RAW32_LO/HI below.
+# Confirmed empirically that for that topology, registers 40003-40004 are
+# actually a single 32-bit two's-complement value (matching the internal
+# DSP's native "SETIOUTDCCT (32bit)" reference), not separate
+# magnitude+sign fields: writing plain magnitude + a 0/1 sign flag (as this
+# record and CURRENT_SP_SIGN below do) produces a large, wrong positive
+# value for negative setpoints (e.g. -1A firmware-reassembled as +66.536A,
+# from high_word=1, low_word=1000 -> 1*65536+1000). This record remains
+# correct as-is for contactor-based units, which use it as a genuine
+# unsigned magnitude alongside separate polarity-contactor commands.
 record(ao, "$(P):CURR_SET_RAW")
 {
     field(DTYP, "asynInt32")
@@ -181,6 +193,10 @@ record(ao, "$(P):CURR_SET_RAW")
 }
 
 ################### Current Sign (Register 40004 / 0x03) - Write ####################
+# See NOTE on CURR_SET_RAW above - not appropriate for sign-bit/bipolar
+# topology setpoints despite the name. Correct as-is for contactor-based
+# units (which don't write this register at all - polarity is contactor-
+# driven for them).
 record(mbbo, "$(P):CURRENT_SP_SIGN")
 {
     field(DTYP, "asynInt32")
@@ -190,6 +206,31 @@ record(mbbo, "$(P):CURRENT_SP_SIGN")
     field(ONST, "Negative")
     field(ZRVL, "0")
     field(ONVL, "1")
+}
+
+################### Current Reference 32-bit split (Registers 40003-40004) - Write ####################
+# For the sign-bit/bipolar (H-bridge) topology: registers 40003-40004 form
+# a single 32-bit two's-complement current reference at the wire level
+# (confirmed empirically - see NOTE on CURR_SET_RAW above), not separate
+# magnitude+sign fields. These raw, unscaled low/high words let the SNL
+# program write the correct 32-bit split directly. Not for manual/operator
+# use - written by unimagEEIControl.st only.
+record(ao, "$(P):CURR_SET_RAW32_LO")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 2 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current ref 32-bit low word (raw)")
+    field(DRVL, "0")
+    field(DRVH, "65535")
+}
+
+record(ao, "$(P):CURR_SET_RAW32_HI")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT_WR) 3 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current ref 32-bit high word (raw)")
+    field(DRVL, "0")
+    field(DRVH, "65535")
 }
 
 ################### Ramp Rate (Register 40005 / 0x04) - Write ####################

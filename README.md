@@ -127,7 +127,7 @@ chmod +x st.cmd
 | `$(P):STAT_POLARITY_POS` | bi | Positive polarity active |
 | `$(P):STAT_POLARITY_NEG` | bi | Negative polarity active |
 | `$(P):STAT_CONTACTORS_OPEN` | bi | Contactors open |
-| `$(P):CURRENT_RB` | calc | Current readback (A), **signed** — matches `$(P):CURRENT_SP`'s convention. Sign source depends on `CFG_POLARITY_VIA_SIGN`: `CURRENT_RB_SIGN` for sign-bit units, `STAT_POLARITY_NEG` for contactor-based units (see below) |
+| `$(P):CURRENT_RB` | calc | Current readback (A), **signed** — matches `$(P):CURRENT_SP`'s convention. `CURR_RB_RAW` is already signed on both topologies (asyn sign-extends it) and is passed through directly; `CURRENT_RB_SIGN` is not reliably populated on either and isn't used (see below) |
 | `$(P):CURR_RB_RAW` | ai | Raw hardware magnitude register (unsigned) |
 | `$(P):CURRENT_RB_SIGN` | mbbi | Raw hardware sign register |
 | `$(P):VOLT_RB` | ai | Voltage readback (V) |
@@ -285,10 +285,23 @@ in this power supply family, each with a completely different polarity mechanism
   is the `$(P):CMD_POLARITY_POS_EXEC` / `NEG_EXEC` + `$(P):CMD_CONTACTORS_OPEN` sequence described above,
   confirmed via the `$(P):STAT_POLARITY_POS` / `NEG` contactor-state readbacks.
 - **Pulsed-dipole regulators** (e.g. DHPTB102) use a solid-state H-bridge converter with **no polarity
-  contactors at all** — current is reversed electronically via a sign bit on the current reference
-  (`$(P):CURRENT_SP_SIGN`), committed by the same `$(P):CMD_START_RAMP` trigger used for a magnitude
-  change. `$(P):STAT_POLARITY_POS`/`NEG` reflect a contactor that doesn't exist on this topology and can't
-  be used to confirm a polarity change on it.
+  contactors at all** — current is reversed electronically via the current reference itself, committed by
+  the same `$(P):CMD_START_RAMP` trigger used for a magnitude change. `$(P):STAT_POLARITY_POS`/`NEG` reflect
+  a contactor that doesn't exist on this topology and can't be used to confirm a polarity change on it.
+
+  **Important**: despite the register names and the Modbus map's column labels, `$(P):CURR_SET_RAW`
+  (register 40003) and `$(P):CURRENT_SP_SIGN` (register 40004) are **not** separate magnitude+sign fields
+  on this topology — confirmed empirically, they're actually a single 32-bit two's-complement value at the
+  wire level (matching the internal DSP's native `SETIOUTDCCT (32bit)` reference documented in
+  `docs/manuals/w39nd03880.txt`). Writing plain magnitude + a 0/1 sign flag works by coincidence for small
+  positive values (two's-complement high word of a small positive number is legitimately `0`) but produces
+  a large, wrong **positive** value for negative setpoints — e.g. `-1A` was firmware-reassembled as
+  `+66.536A` (`high_word=1, low_word=1000` → `1×65536+1000`). This also affects large *positive* currents
+  on this topology once the magnitude exceeds 65.535A (doesn't fit a single 16-bit word either).
+  `unimagEEIControl.st`'s `currentToRaw32()` computes the correct 32-bit split, written via the raw,
+  unscaled `$(P):CURR_SET_RAW32_LO`/`HI` registers (in `eei_ps.template`) instead of `CURR_SET_RAW`/
+  `CURRENT_SP_SIGN`, which remain correct as-is for contactor-based units (genuine unsigned magnitude, no
+  32-bit combination involved for them).
 
 This is confirmed by `docs/manuals/170458-INFN-manuale-110319.pdf` §6.2.6.1 ("Alimentatore MPS-F per
 Magneti Fast Dipoli" — the Fast/pulsed-dipole line DHPTB102 belongs to): current inversion is realized by
@@ -299,25 +312,27 @@ mechanism; it's just a normal signed current-reference update like any other.
 
 This is selected per-IOC via `$(P):CFG_POLARITY_VIA_SIGN` (in `eei_ps_unimag.template`, set with the
 `POLARITY_VIA_SIGN` db macro; default `0` = contactor-based). When set, `unimagEEIControl.st` skips the
-ramp-to-zero/standby/power-cycle dance entirely (`SET_SIGNED_CURRENT` state) — every setpoint just writes
-`$(P):CURRENT_SP_SIGN` and the magnitude together and pulses `$(P):CMD_START_RAMP`, whether or not polarity
-is actually changing, matching the manual's description that this topology has no Standby restriction and
-handles inversion automatically. Polarity state is tracked internally in the SNL (`STAT_POLARITY_POS`/`NEG`
-aren't consulted) since there's no hardware confirmation available for this topology.
+ramp-to-zero/standby/power-cycle dance entirely (`SET_SIGNED_CURRENT` state) — every setpoint writes the
+complete signed 32-bit current reference (see above) and pulses `$(P):CMD_START_RAMP`, whether or not
+polarity is actually changing, matching the manual's description that this topology has no Standby
+restriction and handles inversion automatically. Polarity state is tracked internally in the SNL
+(`STAT_POLARITY_POS`/`NEG` aren't consulted) since there's no hardware confirmation available for this
+topology.
 
-The same split applies to the signed readback, `$(P):CURRENT_RB` (a `calc` record over `$(P):CURR_RB_RAW`,
-register 40025), and it's a genuinely different relationship per topology, not just a different sign
-source:
-- **Sign-bit units**: `CURR_RB_RAW` is a true absolute value here (matches the Modbus map's DP01-column
-  label "ABSOLUTE VALUE"), so the sign is applied from `$(P):CURRENT_RB_SIGN` (a real register for this
-  topology).
-- **Contactor-based units**: `CURR_RB_RAW` is *already a signed sensor reading* — the Modbus map only
-  qualifies this register as "ABSOLUTE VALUE" in the DP01 column; the DH,DC/QUADS columns just say
-  `curr_readout`, unqualified, and empirically it does read negative when `STAT_POLARITY_NEG` is active. So
-  for this topology `CURRENT_RB` must pass `CURR_RB_RAW` through **unchanged** — applying `STAT_POLARITY_NEG`
-  on top of it double-negates and silently flips the sign back to wrong. (`CURRENT_RB_SIGN` is also
-  DP01-spec-only and isn't driven by contactor-based firmware at all — it just sits at its power-on default,
-  which is why it must never be used for this topology either.)
+The signed readback, `$(P):CURRENT_RB` (a `calc` record over `$(P):CURR_RB_RAW`, register 40025), is
+simpler than it first appeared: `CURR_RB_RAW` is **already genuinely signed on both topologies** — asyn
+sign-extends the 16-bit register correctly, and it directly reflects the real measured current's sign — so
+`CURRENT_RB` just passes it straight through, unconditionally.
+
+`$(P):CURRENT_RB_SIGN` (register 40026), despite the Modbus map suggesting it carries the sign for
+DP01/sign-bit units, is **not reliably populated on real hardware on either topology** — it consistently
+reads a fixed raw `0xFFFF` ("Illegal Value") regardless of actual polarity, confirmed with repeated stable
+reads several seconds apart on both QUATB201 and DHPTB102. It must not be used to re-sign `CURR_RB_RAW` on
+either topology; doing so double-negates and silently flips the sign back to wrong. (An earlier reading
+that looked like a reliable `CURRENT_RB_SIGN` on DHPTB102 turned out to be an artifact of the firmware being
+in a confused internal state from the write-side 32-bit bug below, not a real signal — worth remembering if
+this is revisited: a "confirmed" reading isn't trustworthy until it's also confirmed *after* any other
+active bug on the same registers has been fixed.)
 
 Example of setting `POLARITY_VIA_SIGN` on the `eei_ps_unimag.template` load:
 
@@ -328,9 +343,11 @@ dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI
 See `iocBoot/psmodbusEEIIOC/st-dhptb102.cmd`.
 
 For manual/low-level control (bypassing the sequencing above), the underlying PVs can still be driven
-directly: `$(P):CURR_SET_RAW` (unsigned magnitude), `$(P):CURRENT_SP_SIGN`, and
-`$(P):CMD_POLARITY_POS_REQ` / `$(P):CMD_POLARITY_NEG_REQ` (which run the contactor-open + polarity-write
-sequence via a `seq` record instead of the SNL program — only meaningful on contactor-based units). This
+directly: `$(P):CURR_SET_RAW` (unsigned magnitude) + `$(P):CMD_POLARITY_POS_REQ` / `$(P):CMD_POLARITY_NEG_REQ`
+(which run the contactor-open + polarity-write sequence via a `seq` record instead of the SNL program) on
+contactor-based units. **On sign-bit units, do not write `CURR_SET_RAW`/`CURRENT_SP_SIGN` directly** — as
+described above they're actually one combined 32-bit value, not independent fields; use
+`$(P):CURR_SET_RAW32_LO`/`HI` (raw, unscaled) instead, computed the same way `currentToRaw32()` does. This
 is intended for debugging only — normal operation should go through `$(P):CURRENT_SP`.
 
 Overall power supply state can also be read/set via the decoded `$(P):STATE_RB` (STANDBY/ON/FAULT) and
