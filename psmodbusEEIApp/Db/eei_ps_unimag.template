@@ -113,17 +113,13 @@ record(calcout, "$(P):STATE_DECODE")
     field(INPE, "$(P):FAULT_PLC_MAG_ILK1 CP NMS")
     field(INPF, "$(P):FAULT_PLC_MAG_ILK2 CP NMS")
     field(CALC, "D?5:((E||F)?4:(C?3:(B?1:(A?2:0))))")
-    # Propagated to STATE_RB with MSS, giving CONN_FAULT a real HIHI alarm
-    # status while retaining the enum string from the mbbi record.
-    field(HIHI, "5")
-    field(HHSV, "MAJOR")
     field(OUT,  "$(P):STATE_RB PP")
 }
 
 record(mbbi, "$(P):STATE_RB")
 {
     field(DESC, "Power Supply State")
-    field(INP,  "$(P):STATE_DECODE NPP MSS")
+    field(INP,  "$(P):STATE_DECODE NPP")
     field(ZRST, "OFF")
     field(ONST, "ON")
     field(TWST, "STANDBY")
@@ -141,7 +137,7 @@ record(mbbi, "$(P):STATE_RB")
     field(TWSV, "NO_ALARM")
     field(THSV, "MAJOR")
     field(FRSV, "MAJOR")
-    field(FVSV, "NO_ALARM")
+    field(FVSV, "MAJOR")
 }
 
 # State control setpoint
