@@ -132,7 +132,7 @@ chmod +x st.cmd
 | `$(P):CURRENT_RB_SIGN` | mbbi | Raw hardware sign register |
 | `$(P):VOLT_RB` | ai | Voltage readback (V) |
 | `$(P):RAMP_RATE_RB` | ai | Ramp rate readback (A/s) |
-| `$(P):STATE_RB` | mbbi | Decoded power supply state (STANDBY/ON/FAULT) |
+| `$(P):STATE_RB` | mbbi | Decoded state (0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK, 5=CONN_FAULT); communication fault is HIHI |
 
 ### Fault Monitoring PVs (Read)
 

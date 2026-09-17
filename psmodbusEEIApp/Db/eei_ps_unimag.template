@@ -14,6 +14,8 @@ record(ao, "$(P):CURRENT_SP")
     field(DESC, "Current Setpoint (signed)")
     field(EGU,  "A")
     field(PREC, "3")
+    field(VAL,  "0.001")
+    field(PINI, "YES")
     field(DRVH, "$(MAX_CURR=330)")
     field(DRVL, "$(MIN_CURR=-330)")
     field(HOPR, "$(MAX_CURR=330)")
@@ -93,31 +95,53 @@ record(calc, "$(P):CURRENT_RB")
 
 # Overall status readback - decode state from individual bits
 # PV format: $(P):STATE_RB
-# Values: 1=STANDBY (includes OFF), 2=ON, 3=FAULT
-# Priority: FAULT > ON > STANDBY
+# Values: 0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK,
+#         5=CONN_FAULT
+# Priority: CONN_FAULT > EXT_INTLK > FAULT > ON > STANDBY > OFF
 record(calcout, "$(P):STATE_DECODE")
 {
     field(DESC, "Decode Power Supply State")
     field(INPA, "$(P):STAT_STANDBY CP")
     field(INPB, "$(P):STAT_POWER_ON CP")
     field(INPC, "$(P):STAT_FAULTY CP")
-    field(CALC, "C?3:(B?1:2)")
+    # STAT_WORD1_RB has no configured value alarms, so a non-zero SEVR means
+    # its Modbus/asyn read failed.  Checking SEVR keeps a valid all-zero status
+    # word available for OFF instead of confusing it with a connection fault.
+    # Magnet interlock faults are reported as a distinct state instead of the
+    # generic power-supply fault.
+    field(INPD, "$(P):STAT_WORD1_RB.SEVR CP NMS")
+    field(INPE, "$(P):FAULT_PLC_MAG_ILK1 CP NMS")
+    field(INPF, "$(P):FAULT_PLC_MAG_ILK2 CP NMS")
+    field(CALC, "D?5:((E||F)?4:(C?3:(B?1:(A?2:0))))")
+    # Propagated to STATE_RB with MSS, giving CONN_FAULT a real HIHI alarm
+    # status while retaining the enum string from the mbbi record.
+    field(HIHI, "5")
+    field(HHSV, "MAJOR")
     field(OUT,  "$(P):STATE_RB PP")
 }
 
 record(mbbi, "$(P):STATE_RB")
 {
     field(DESC, "Power Supply State")
-    field(INP,  "$(P):STATE_DECODE NPP MS")
+    field(INP,  "$(P):STATE_DECODE NPP MSS")
+    field(ZRST, "OFF")
     field(ONST, "ON")
     field(TWST, "STANDBY")
     field(THST, "FAULT")
+    field(FRST, "EXT_INTLK")
+    field(FVST, "CONN_FAULT")
+    field(ZRVL, "0")
     field(ONVL, "1")
     field(TWVL, "2")
     field(THVL, "3")
+    field(FRVL, "4")
+    field(FVVL, "5")
+    field(ZRSV, "NO_ALARM")
     field(ONSV, "NO_ALARM")
     field(TWSV, "NO_ALARM")
     field(THSV, "MAJOR")
+    field(FRSV, "MAJOR")
+    field(FVSV, "NO_ALARM")
 }
 
 # State control setpoint
