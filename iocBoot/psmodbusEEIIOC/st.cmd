@@ -58,8 +58,8 @@ drvModbusAsynConfigure("EEI_HOLDING_WR_DHPTB102", "EEI_IP_DHPTB102",1, 16, 0, 45
 # so polarity is set via the CURRENT_SP_SIGN bit + CMD_START_RAMP trigger
 # instead (POLARITY_VIA_SIGN=1) - see eei_ps_unimag.template and
 # unimagEEIControl.st for details.
-dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD_DHPTB102,PORT_WR=EEI_HOLDING_WR_DHPTB102,MAX_CURR=100,MIN_CURR=-100")
-dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD_DHPTB102,PORT_WR=EEI_HOLDING_WR_DHPTB102,POLARITY_VIA_SIGN=1,MAX_CURR=100,MIN_CURR=-100")
+dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD_DHPTB102,PORT_WR=EEI_HOLDING_WR_DHPTB102,MAX_CURR=330,MIN_CURR=-330")
+dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD_DHPTB102,PORT_WR=EEI_HOLDING_WR_DHPTB102,POLARITY_VIA_SIGN=1,MAX_CURR=330,MIN_CURR=-330")
 
 ## Configure Modbus communication - QUATB202
 drvAsynIPPortConfigure("EEI_IP_QUATB202", "192.168.190.152:502", 0, 0, 0)

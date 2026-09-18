@@ -30,8 +30,8 @@ drvModbusAsynConfigure("EEI_HOLDING_WR", "EEI_IP",1, 16, 0, 45, 0, 0, "EEI")
 # so polarity is set via the CURRENT_SP_SIGN bit + CMD_START_RAMP trigger
 # instead (POLARITY_VIA_SIGN=1) - see eei_ps_unimag.template and
 # unimagEEIControl.st for details.
-dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,MAX_CURR=100,MIN_CURR=-100")
-dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,POLARITY_VIA_SIGN=1,MAX_CURR=100,MIN_CURR=-100")
+dbLoadRecords("../../db/eei_ps.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,MAX_CURR=330,MIN_CURR=-330")
+dbLoadRecords("../../db/eei_ps_unimag.template","P=BTF:MAG:EEI:DHPTB102,PORT=EEI_HOLDING_RD,PORT_WR=EEI_HOLDING_WR,POLARITY_VIA_SIGN=1,MAX_CURR=330,MIN_CURR=-330")
 
 ## Start IOC
 iocInit()
