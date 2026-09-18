@@ -37,6 +37,10 @@ record(bo, "$(P):CMD_RESET")
     field(DESC, "Reset Command")
     field(ZNAM, "Off")
     field(ONAM, "Reset")
+    # Momentary: a latched 1 would never produce a new edge, so a second
+    # reset (e.g. to clear SP_NOT_REACHED/ST_NOT_REACHED again) would be
+    # invisible to both the hardware and unimagEEIControl.st.
+    field(HIGH, "0.5")
 }
 
 record(bo, "$(P):CMD_START_RAMP")

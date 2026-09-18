@@ -93,11 +93,75 @@ record(calc, "$(P):CURRENT_RB")
     field(PREC, "3")
 }
 
+################### Sequencing tolerances and failure flags ####################
+# Used by unimagEEIControl.st. Exact zero / exact setpoint are never reached
+# on real hardware (sensor noise, regulator dead-band), so every wait is
+# judged against a tolerance and bounded by a timeout instead.
+#   ZERO_TOLERANCE  - |readback| at or below this is "zero" (before standby /
+#                     polarity change)
+#   SET_TOLERANCE   - readback within this of the request is "reached"
+#                     (0 disables the check)
+#   SET_TIMEOUT_S   - how long each wait may last before it is reported failed
+record(ao, "$(P):ZERO_TOLERANCE")
+{
+    field(DESC, "Current considered zero")
+    field(EGU,  "A")
+    field(PREC, "3")
+    field(VAL,  "$(ZERO_TOLERANCE=2)")
+    field(PINI, "YES")
+    field(DRVL, "0")
+    field(DRVH, "100")
+    field(HOPR, "100")
+    field(LOPR, "0")
+}
+
+record(ao, "$(P):SET_TOLERANCE")
+{
+    field(DESC, "Setpoint reached tolerance")
+    field(EGU,  "A")
+    field(PREC, "3")
+    field(VAL,  "$(SET_TOLERANCE=1)")
+    field(PINI, "YES")
+    field(DRVL, "0")
+    field(DRVH, "100")
+    field(HOPR, "100")
+    field(LOPR, "0")
+}
+
+record(ao, "$(P):SET_TIMEOUT_S")
+{
+    field(DESC, "Zero/state/setpoint wait timeout")
+    field(EGU,  "s")
+    field(PREC, "1")
+    field(VAL,  "$(SET_TIMEOUT_S=30)")
+    field(PINI, "YES")
+    field(DRVL, "1")
+    field(DRVH, "300")
+    field(HOPR, "300")
+    field(LOPR, "1")
+}
+
+# Set by unimagEEIControl.st, cleared by the next setpoint or CMD_RESET
+record(bo, "$(P):SP_NOT_REACHED")
+{
+    field(DESC, "Setpoint not reached in time")
+    field(ZNAM, "OK")
+    field(ONAM, "Not Reached")
+}
+
+record(bo, "$(P):ST_NOT_REACHED")
+{
+    field(DESC, "Zero/standby/polarity/power not reached")
+    field(ZNAM, "OK")
+    field(ONAM, "Not Reached")
+}
+
 # Overall status readback - decode state from individual bits
 # PV format: $(P):STATE_RB
 # Values: 0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK,
-#         5=CONN_FAULT
-# Priority: CONN_FAULT > EXT_INTLK > FAULT > ON > STANDBY > OFF
+#         5=CONN_FAULT, 6=SP_NOT_REACHED, 7=ST_NOT_REACHED
+# Priority: CONN_FAULT > EXT_INTLK > FAULT > ST_NOT_REACHED >
+#           SP_NOT_REACHED > ON > STANDBY > OFF
 record(calcout, "$(P):STATE_DECODE")
 {
     field(DESC, "Decode Power Supply State")
@@ -112,7 +176,11 @@ record(calcout, "$(P):STATE_DECODE")
     field(INPD, "$(P):STAT_WORD1_RB.SEVR CP NMS")
     field(INPE, "$(P):FAULT_PLC_MAG_ILK1 CP NMS")
     field(INPF, "$(P):FAULT_PLC_MAG_ILK2 CP NMS")
-    field(CALC, "D?5:((E||F)?4:(C?3:(B?1:(A?2:0))))")
+    # A failed sequencing step or an unreached setpoint (see the tolerance
+    # section above) only shows when nothing more serious is active.
+    field(INPG, "$(P):ST_NOT_REACHED CP NMS")
+    field(INPH, "$(P):SP_NOT_REACHED CP NMS")
+    field(CALC, "D?5:((E||F)?4:(C?3:(G?7:(H?6:(B?1:(A?2:0))))))")
     field(OUT,  "$(P):STATE_RB PP")
 }
 
@@ -132,12 +200,18 @@ record(mbbi, "$(P):STATE_RB")
     field(THVL, "3")
     field(FRVL, "4")
     field(FVVL, "5")
+    field(SXST, "SP_NOT_REACHED")
+    field(SXVL, "6")
+    field(SVST, "ST_NOT_REACHED")
+    field(SVVL, "7")
     field(ZRSV, "NO_ALARM")
     field(ONSV, "NO_ALARM")
     field(TWSV, "NO_ALARM")
     field(THSV, "MAJOR")
     field(FRSV, "MAJOR")
     field(FVSV, "MAJOR")
+    field(SXSV, "MINOR")
+    field(SVSV, "MAJOR")
 }
 
 # State control setpoint

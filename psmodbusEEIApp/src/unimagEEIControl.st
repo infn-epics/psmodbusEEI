@@ -42,12 +42,35 @@ program unimagEEIControl
  * CURR_SET_RAW32_LO/HI registers instead. This also matters for large
  * *positive* currents on this topology - e.g. above 65.535A - which
  * likewise don't fit in a single 16-bit word.
+ *
+ * Every wait is bounded by "{P}:SET_TIMEOUT_S" and judged against the
+ * tolerances "{P}:ZERO_TOLERANCE" (current considered zero before switching
+ * polarity/standby) and "{P}:SET_TOLERANCE" (requested current considered
+ * reached). Exact zero/setpoint are never reached on real hardware (sensor
+ * noise, regulator dead-band), so a plain equality test would stall every
+ * polarity change. A failed wait is reported through "{P}:ST_NOT_REACHED"
+ * (a state - zero, standby, polarity or power-on - was not reached, MAJOR
+ * STATE_RB) or "{P}:SP_NOT_REACHED" (the setpoint was not reached within
+ * tolerance, MINOR STATE_RB). Both are cleared by the next setpoint or by
+ * CMD_RESET.
  */
 
 option +r;  /* Make reentrant */
 
 /* C declarations */
 %% #include <math.h>
+
+/* Absolute difference, in Amps, between the readback and the requested
+ * current. The readback register is a 16-bit value in mA, so it aliases
+ * every 65.536A (e.g. a real +40A reads as -25.536A): compare modulo that
+ * span, otherwise anything above 32.767A would look like a huge error. */
+%% static double currentError(double rb, double sp)
+%% {
+%%     double d = fmod(rb - sp, 65.536);
+%%     if (d > 32.768) d -= 65.536;
+%%     else if (d < -32.768) d += 65.536;
+%%     return fabs(d);
+%% }
 
 /* Splits a signed current in Amps into the 32-bit two's-complement raw
  * low/high words expected by the sign-bit/bipolar topology's combined
@@ -124,6 +147,24 @@ int cmd_reset;
 assign cmd_reset to "{P}:CMD_RESET";
 monitor cmd_reset;
 
+double zero_tolerance;
+assign zero_tolerance to "{P}:ZERO_TOLERANCE";
+monitor zero_tolerance;
+
+double set_tolerance;
+assign set_tolerance to "{P}:SET_TOLERANCE";
+monitor set_tolerance;
+
+double set_timeout_s;
+assign set_timeout_s to "{P}:SET_TIMEOUT_S";
+monitor set_timeout_s;
+
+int sp_not_reached;
+assign sp_not_reached to "{P}:SP_NOT_REACHED";
+
+int st_not_reached;
+assign st_not_reached to "{P}:ST_NOT_REACHED";
+
 /* Event flags */
 evflag current_sp_ef;
 sync current_sp current_sp_ef;
@@ -139,15 +180,20 @@ int polarity_change_needed;
 int timeout_counter;
 
 /* Constants */
-#define CURRENT_THRESHOLD 2.0
-#define TIMEOUT_TICKS 60  /* 30 seconds with 0.5s delay */
+#define TICK_S 0.5  /* wait states poll on this delay and count ticks */
+#define TIMEOUT_TICKS ((int)(set_timeout_s / TICK_S))
 #define POL_POSITIVE 1
 #define POL_NEGATIVE 2
 
 ss unimag_control {
     state IDLE {
         when (efTestAndClear(current_sp_ef)) {
-            /* New current setpoint received */
+            /* New current setpoint received - a new attempt clears the
+             * previous failure. */
+            sp_not_reached = 0;
+            pvPut(sp_not_reached);
+            st_not_reached = 0;
+            pvPut(st_not_reached);
             requested_current = current_sp;
             abs_current = fabs(requested_current);
             
@@ -178,9 +224,13 @@ ss unimag_control {
         } state CHECK_STATE
         
         when (efTestAndClear(cmd_reset_ef)) {
-            /* Reset command cancels all operations */
+            /* Reset command cancels all operations and clears failures */
             polarity_change_needed = 0;
             timeout_counter = 0;
+            sp_not_reached = 0;
+            pvPut(sp_not_reached);
+            st_not_reached = 0;
+            pvPut(st_not_reached);
         } state IDLE
     }
     
@@ -200,12 +250,12 @@ ss unimag_control {
             /* No polarity change needed, just set current directly */
         } state SET_CURRENT_DIRECT
 
-        when (polarity_change_needed && stat_power_on && fabs(current_rb) > CURRENT_THRESHOLD) {
+        when (polarity_change_needed && stat_power_on && fabs(current_rb) > zero_tolerance) {
             /* Need to ramp to zero first */
         } state RAMP_TO_ZERO
-        
-        when (polarity_change_needed && stat_power_on && fabs(current_rb) <= CURRENT_THRESHOLD) {
-            /* Can go directly to standby */
+
+        when (polarity_change_needed && stat_power_on && fabs(current_rb) <= zero_tolerance) {
+            /* Zero within tolerance, can go directly to standby */
         } state GO_STANDBY
         
         when (polarity_change_needed && !stat_power_on) {
@@ -223,22 +273,26 @@ ss unimag_control {
             timeout_counter = 0;
         }
         
-        when (fabs(current_rb) < CURRENT_THRESHOLD) {
-            /* Current reached zero */
+        when (fabs(current_rb) <= zero_tolerance) {
+            /* Current reached zero (within tolerance) */
         } state GO_STANDBY
-        
-        when (timeout_counter++ >= TIMEOUT_TICKS) {
+
+        when (timeout_counter >= TIMEOUT_TICKS) {
             /* Timeout - cancel operation */
             polarity_change_needed = 0;
-            printf("unimagControl: Timeout waiting for zero current\n");
+            st_not_reached = 1;
+            pvPut(st_not_reached);
+            printf("unimagControl: Zero not reached (current=%.3fA, tolerance=%.3fA)\n",
+                   current_rb, zero_tolerance);
         } state IDLE
-        
+
         when (efTestAndClear(cmd_reset_ef)) {
             polarity_change_needed = 0;
         } state IDLE
-        
-        when (delay(0.5)) {
+
+        when (delay(TICK_S)) {
             /* Keep checking */
+            timeout_counter++;
         } state RAMP_TO_ZERO
     }
     
@@ -257,19 +311,22 @@ ss unimag_control {
         when (stat_standby) {
             /* Standby confirmed */
         } state CHANGE_POLARITY
-        
-        when (timeout_counter++ >= TIMEOUT_TICKS) {
+
+        when (timeout_counter >= TIMEOUT_TICKS) {
             /* Timeout - cancel operation */
             polarity_change_needed = 0;
-            printf("unimagControl: Timeout waiting for standby\n");
+            st_not_reached = 1;
+            pvPut(st_not_reached);
+            printf("unimagControl: Standby not reached\n");
         } state IDLE
-        
+
         when (efTestAndClear(cmd_reset_ef)) {
             polarity_change_needed = 0;
         } state IDLE
-        
-        when (delay(0.5)) {
+
+        when (delay(TICK_S)) {
             /* Keep checking */
+            timeout_counter++;
         } state WAIT_STANDBY
     }
     
@@ -305,6 +362,10 @@ ss unimag_control {
     }
 
     state WAIT_POLARITY_DELAY {
+        entry {
+            timeout_counter = 0;
+        }
+
         when (delay(2.0)) {
         } state WAIT_POLARITY
     }
@@ -321,18 +382,21 @@ ss unimag_control {
             polarity_change_needed = 0;
         } state GO_POWERON
 
-        when (timeout_counter++ >= TIMEOUT_TICKS) {
+        when (timeout_counter >= TIMEOUT_TICKS) {
             /* Timeout - cancel operation */
             polarity_change_needed = 0;
-            printf("unimagControl: Timeout waiting for polarity change\n");
+            st_not_reached = 1;
+            pvPut(st_not_reached);
+            printf("unimagControl: Polarity change not reached\n");
         } state IDLE
 
         when (efTestAndClear(cmd_reset_ef)) {
             polarity_change_needed = 0;
         } state IDLE
 
-        when (delay(0.5)) {
+        when (delay(TICK_S)) {
             /* Keep checking */
+            timeout_counter++;
             pvGet(stat_polarity_pos);
             pvGet(stat_polarity_neg);
         } state WAIT_POLARITY
@@ -354,16 +418,19 @@ ss unimag_control {
             /* Power on confirmed */
         } state SET_CURRENT
         
-        when (timeout_counter++ >= TIMEOUT_TICKS) {
+        when (timeout_counter >= TIMEOUT_TICKS) {
             /* Timeout - cancel operation */
-            printf("unimagControl: Timeout waiting for power on\n");
+            st_not_reached = 1;
+            pvPut(st_not_reached);
+            printf("unimagControl: Power on not reached\n");
         } state IDLE
-        
+
         when (efTestAndClear(cmd_reset_ef)) {
         } state IDLE
-        
-        when (delay(0.5)) {
+
+        when (delay(TICK_S)) {
             /* Keep checking */
+            timeout_counter++;
         } state WAIT_POWERON
     }
     
@@ -385,9 +452,9 @@ ss unimag_control {
         }
 
         when (delay(0.2)) {
-        } state IDLE
+        } state VERIFY_SET
     }
-    
+
     state SET_CURRENT_DIRECT {
         entry {
             /* No polarity change needed, check if we need to power on */
@@ -414,17 +481,20 @@ ss unimag_control {
             pvPut(curr_set);
         } state RAMP_DIRECT
 
-        when (timeout_counter++ >= TIMEOUT_TICKS) {
+        when (timeout_counter >= TIMEOUT_TICKS) {
             /* Timeout - don't get stuck here forever, or every future
              * setpoint would silently be ignored (IDLE never revisited). */
-            printf("unimagControl: Timeout waiting for power on (direct)\n");
+            st_not_reached = 1;
+            pvPut(st_not_reached);
+            printf("unimagControl: Power on not reached (direct)\n");
         } state IDLE
 
         when (efTestAndClear(cmd_reset_ef)) {
         } state IDLE
 
-        when (delay(0.5)) {
+        when (delay(TICK_S)) {
             /* Keep checking */
+            timeout_counter++;
         } state WAIT_POWERON_DIRECT
     }
     
@@ -437,7 +507,7 @@ ss unimag_control {
     
     state IDLE_DIRECT {
         when (delay(0.2)) {
-        } state IDLE
+        } state VERIFY_SET
     }
 
     state SET_SIGNED_CURRENT {
@@ -470,17 +540,20 @@ ss unimag_control {
             /* Reference already written in SET_SIGNED_CURRENT's entry */
         } state RAMP_SIGNED
 
-        when (timeout_counter++ >= TIMEOUT_TICKS) {
+        when (timeout_counter >= TIMEOUT_TICKS) {
             /* Timeout - don't get stuck here forever, or every future
              * setpoint would silently be ignored (IDLE never revisited). */
-            printf("unimagControl: Timeout waiting for power on (signed)\n");
+            st_not_reached = 1;
+            pvPut(st_not_reached);
+            printf("unimagControl: Power on not reached (signed)\n");
         } state IDLE
 
         when (efTestAndClear(cmd_reset_ef)) {
         } state IDLE
 
-        when (delay(0.5)) {
+        when (delay(TICK_S)) {
             /* Keep checking */
+            timeout_counter++;
         } state WAIT_POWERON_SIGNED
     }
 
@@ -493,6 +566,37 @@ ss unimag_control {
 
     state IDLE_SIGNED {
         when (delay(0.2)) {
+        } state VERIFY_SET
+    }
+
+    /* Waits for the readback to get within SET_TOLERANCE of the requested
+     * current. A SET_TOLERANCE of 0 disables the check. A new setpoint or a
+     * reset abandons the wait (IDLE then consumes the pending event). */
+    state VERIFY_SET {
+        entry {
+            timeout_counter = 0;
+        }
+
+        when (set_tolerance <= 0) {
         } state IDLE
+
+        when (efTest(current_sp_ef) || efTest(cmd_reset_ef)) {
+        } state IDLE
+
+        when (currentError(current_rb, requested_current) <= set_tolerance) {
+            /* Setpoint reached (within tolerance) */
+        } state IDLE
+
+        when (timeout_counter >= TIMEOUT_TICKS) {
+            sp_not_reached = 1;
+            pvPut(sp_not_reached);
+            printf("unimagControl: Setpoint not reached (requested=%.3fA, readback=%.3fA, tolerance=%.3fA)\n",
+                   requested_current, current_rb, set_tolerance);
+        } state IDLE
+
+        when (delay(TICK_S)) {
+            /* Keep checking */
+            timeout_counter++;
+        } state VERIFY_SET
     }
 }
