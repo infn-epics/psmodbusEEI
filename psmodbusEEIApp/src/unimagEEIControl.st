@@ -43,6 +43,14 @@ program unimagEEIControl
  * *positive* currents on this topology - e.g. above 65.535A - which
  * likewise don't fit in a single 16-bit word.
  *
+ * The contactor units use the same register pair, but for the (unsigned)
+ * magnitude only: verified on QUATB201 that low word 4464 + high word 1
+ * drives 70A (1*65536+4464 mA; output voltage 105V), whereas writing the
+ * magnitude as a plain 16-bit register (CURR_SET_RAW) silently truncates it
+ * modulo 65.536A - a 100A request became 34.464A on every contactor unit.
+ * The polarity of these units is still selected by the contactors, so only
+ * the magnitude is written (WRITE_CURRENT_REF below).
+ *
  * Every wait is bounded by "{P}:SET_TIMEOUT_S" and judged against the
  * tolerances "{P}:ZERO_TOLERANCE" (current considered zero before switching
  * polarity/standby) and "{P}:SET_TOLERANCE" (requested current considered
@@ -61,17 +69,12 @@ option +r;  /* Make reentrant */
 %% #include <math.h>
 
 /* Absolute difference, in Amps, between the readback and the requested
- * current. The readback register is a 16-bit value in mA, so it aliases
- * every 65.536A (e.g. a real +40A reads as -25.536A). Contactor units get
- * that undone in {P}:CURRENT_RB from the polarity, but sign-bit units
- * cannot, so compare modulo that span: otherwise anything above 32.767A
- * would look like a huge error there. */
+ * current. {P}:CURRENT_RB is the exact 32-bit readback, so this is a plain
+ * difference: a unit that silently truncated the reference (e.g. a 16-bit
+ * write above 65.535A) must show up as an error, not be masked. */
 %% static double currentError(double rb, double sp)
 %% {
-%%     double d = fmod(rb - sp, 65.536);
-%%     if (d > 32.768) d -= 65.536;
-%%     else if (d < -32.768) d += 65.536;
-%%     return fabs(d);
+%%     return fabs(rb - sp);
 %% }
 
 /* Splits a signed current in Amps into the 32-bit two's-complement raw
@@ -93,9 +96,6 @@ monitor current_sp;
 double current_rb;
 assign current_rb to "{P}:CURRENT_RB";
 monitor current_rb;
-
-double curr_set;
-assign curr_set to "{P}:CURR_SET_RAW";
 
 int curr_set_raw32_lo;
 assign curr_set_raw32_lo to "{P}:CURR_SET_RAW32_LO";
@@ -187,6 +187,14 @@ int timeout_counter;
 #define POL_POSITIVE 1
 #define POL_NEGATIVE 2
 
+/* Writes a current magnitude/reference as the two 16-bit halves of the
+ * 32-bit register pair 40003-40004 (both topologies, see file header). Both
+ * words are written before the START_RAMP trigger commits them. */
+#define WRITE_CURRENT_REF(amps) \
+    currentToRaw32((amps), &curr_set_raw32_lo, &curr_set_raw32_hi); \
+    pvPut(curr_set_raw32_lo); \
+    pvPut(curr_set_raw32_hi)
+
 ss unimag_control {
     state IDLE {
         when (efTestAndClear(current_sp_ef)) {
@@ -268,8 +276,7 @@ ss unimag_control {
     state RAMP_TO_ZERO {
         entry {
             /* Set current to zero and start ramp */
-            curr_set = 0.0;
-            pvPut(curr_set);
+            WRITE_CURRENT_REF(0.0);
             cmd_start_ramp = 1;
             pvPut(cmd_start_ramp);
             timeout_counter = 0;
@@ -439,8 +446,7 @@ ss unimag_control {
     state SET_CURRENT {
         entry {
             /* Set the absolute current value */
-            curr_set = abs_current;
-            pvPut(curr_set);
+            WRITE_CURRENT_REF(abs_current);
         }
         
         when (delay(0.5)) {
@@ -472,15 +478,13 @@ ss unimag_control {
 
         when (stat_power_on) {
             /* Already powered on */
-            curr_set = abs_current;
-            pvPut(curr_set);
+            WRITE_CURRENT_REF(abs_current);
         } state RAMP_DIRECT
     }
 
     state WAIT_POWERON_DIRECT {
         when (stat_power_on) {
-            curr_set = abs_current;
-            pvPut(curr_set);
+            WRITE_CURRENT_REF(abs_current);
         } state RAMP_DIRECT
 
         when (timeout_counter >= TIMEOUT_TICKS) {

@@ -171,17 +171,21 @@ record(ao, "$(P):POLARITY_CTRL")
 # the signed, operator-facing setpoint is $(P):CURRENT_SP in eei_ps_unimag.template,
 # which the SNL program (unimagEEIControl.st) translates into polarity + this magnitude.
 #
-# NOTE: on the sign-bit/bipolar (H-bridge) topology, this record is NOT
-# appropriate for writing a setpoint - see CURR_SET_RAW32_LO/HI below.
-# Confirmed empirically that for that topology, registers 40003-40004 are
-# actually a single 32-bit two's-complement value (matching the internal
-# DSP's native "SETIOUTDCCT (32bit)" reference), not separate
-# magnitude+sign fields: writing plain magnitude + a 0/1 sign flag (as this
-# record and CURRENT_SP_SIGN below do) produces a large, wrong positive
-# value for negative setpoints (e.g. -1A firmware-reassembled as +66.536A,
-# from high_word=1, low_word=1000 -> 1*65536+1000). This record remains
-# correct as-is for contactor-based units, which use it as a genuine
-# unsigned magnitude alongside separate polarity-contactor commands.
+# NOTE: this is only the LOW word of a 32-bit register pair (40003-40004):
+# a value written here above 65.535A is silently truncated modulo 65.536A,
+# and a high word left over from an earlier setpoint stays in force. Use
+# $(P):CURRENT_SP, which writes both words (CURR_SET_RAW32_LO/HI below).
+# Registers 40003-40004 are a single 32-bit current reference at the wire
+# level, not separate magnitude+sign fields as their names / the Modbus map
+# suggest (matching the DSP's native "SETIOUTDCCT (32bit)" reference):
+#   - sign-bit/bipolar units (DHPTB102): two's-complement signed value;
+#     writing magnitude + a 0/1 sign flag gives a wrong positive value for
+#     negative setpoints (-1A reassembled as +66.536A, from high_word=1,
+#     low_word=1000 -> 1*65536+1000).
+#   - contactor units (quads, steerers): unsigned magnitude (the sign is the
+#     contactor polarity). Verified on QUATB201: low word 4464 + high word 1
+#     drives 70A. With only this 16-bit record, every request above 65.535A
+#     was truncated (a 100A setpoint gave 34.464A on all of them).
 record(ao, "$(P):CURR_SET_RAW")
 {
     field(DTYP, "asynInt32")
@@ -197,10 +201,9 @@ record(ao, "$(P):CURR_SET_RAW")
 }
 
 ################### Current Sign (Register 40004 / 0x03) - Write ####################
-# See NOTE on CURR_SET_RAW above - not appropriate for sign-bit/bipolar
-# topology setpoints despite the name. Correct as-is for contactor-based
-# units (which don't write this register at all - polarity is contactor-
-# driven for them).
+# This is the HIGH word of the 32-bit reference (see NOTE on CURR_SET_RAW
+# above), not a sign flag despite the name. Not for direct use: the sequencer
+# writes it through CURR_SET_RAW32_HI.
 record(mbbo, "$(P):CURRENT_SP_SIGN")
 {
     field(DTYP, "asynInt32")
@@ -213,10 +216,9 @@ record(mbbo, "$(P):CURRENT_SP_SIGN")
 }
 
 ################### Current Reference 32-bit split (Registers 40003-40004) - Write ####################
-# For the sign-bit/bipolar (H-bridge) topology: registers 40003-40004 form
-# a single 32-bit two's-complement current reference at the wire level
-# (confirmed empirically - see NOTE on CURR_SET_RAW above), not separate
-# magnitude+sign fields. These raw, unscaled low/high words let the SNL
+# Registers 40003-40004 form a single 32-bit current reference at the wire
+# level on both topologies (confirmed empirically - see NOTE on CURR_SET_RAW
+# above), not separate magnitude+sign fields. These raw, unscaled low/high words let the SNL
 # program write the correct 32-bit split directly. Not for manual/operator
 # use - written by unimagEEIControl.st only.
 record(ao, "$(P):CURR_SET_RAW32_LO")
@@ -441,7 +443,27 @@ record(ai, "$(P):VOLT_SCALE_RB")
     field(SCAN, "I/O Intr")
 }
 
+################### Current Readback high word (Register 40026 / 0x19) - Read ####################
+# Registers 40025-40026 are one 32-bit two's-complement current in mA (low
+# word in 40025 = CURR_RB_RAW, high word here), like the 40003-40004
+# reference - on both topologies (see $(P):CURRENT_RB in
+# eei_ps_unimag.template for the evidence). The high word reads 0 up to
+# 65.535A, 1 from 65.536A to 131.071A, -1 for -0.001..-65.536A, -2 down to
+# -131.072A, and so on (e.g. -70A = 0xFFFE:0xEE90). It is NOT a 0/1 sign
+# flag, which is why $(P):CURRENT_RB_SIGN below looks unreliable. Signed
+# 16-bit read.
+record(ai, "$(P):CURR_RB_HI_RAW")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT) 25 $(TIMEOUT=1000))MODBUS_DATA")
+    field(DESC, "Current Readback high word (raw)")
+    field(SCAN, "I/O Intr")
+}
+
 ################### Current Sign Readback (Register 40026 / 0x19) - Read ####################
+# Same register as CURR_RB_HI_RAW above, kept for compatibility. It is not a
+# sign flag on the sign-bit topology (see above) and is not used for the
+# signed readback.
 record(mbbi, "$(P):CURRENT_RB_SIGN")
 {
     field(DTYP, "asynInt32")

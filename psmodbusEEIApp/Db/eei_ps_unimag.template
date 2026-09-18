@@ -73,39 +73,33 @@ record(bo, "$(P):CFG_POLARITY_VIA_SIGN")
 # User-facing readback, matches $(P):CURRENT_SP's naming (see
 # eei_ps.template for $(P):CURR_RB_RAW, register 40025).
 #
-# CURR_RB_RAW is already genuinely signed on BOTH topologies - asyn
-# sign-extends the 16-bit register correctly, and it directly reflects the
-# real measured current's sign - so its sign is used as is (only the 16-bit
-# aliasing described below needs undoing).
-# $(P):CURRENT_RB_SIGN (register 40026) is NOT reliably populated on real
-# hardware on either topology: it reads a fixed raw 0xFFFF ("Illegal
-# Value") regardless of actual polarity. This was confirmed with repeated
-# stable reads several seconds apart on both QUATB201 and DHPTB102, *after*
-# fixing the write-side 32-bit-reference bug on DHPTB102 (see CURR_SET_RAW
-# in eei_ps.template) - before that fix, an earlier reading that looked
-# like a reliable CURRENT_RB_SIGN was actually an artifact of the firmware
-# being in a confused state from the malformed setpoint, not a real signal.
+# Registers 40025-40026 are ONE 32-bit two's-complement current in mA, on
+# both topologies: 40025 (CURR_RB_RAW) is the low word and 40026
+# (CURR_RB_HI_RAW) the high word, so the current is
+#     (hi * 65536 + unsigned(lo)) / 1000
+# and is exact over the whole range, with its sign included. Verified:
+#   - DHPTB102 (sign-bit): -135A .. +135A, high word 0/1/2 and -1/-2/-3.
+#   - QUATB206 (contactors, negative polarity): -30A .. -65A read
+#     lo=+5536 / hi=-1 for -60A, i.e. -65536+5536 = -60000mA.
+#   - QUATB201 (contactors): lo=4464 / hi=1 with the output voltage at
+#     105V is a real 70A (65536+4464 mA); the low word alone reads 4.464A.
+# Reading only the low word (as the 16-bit CURR_RB_RAW does) aliases every
+# 65.536A - a real +40A reads as -25.536A - which is what an earlier version
+# of this record tried to undo from the contactor polarity, and could not
+# beyond 65.5A. Nothing needs to be undone any more.
 #
-# Beyond +-32.767A the 16-bit mA register aliases (verified on DHSTB203: a
-# real +40A reads as -25.536A, a real -40A as +25.536A, and the supply
-# really delivers the requested current - its output voltage keeps rising
-# linearly). On contactor units the sign of the current is the contactor
-# polarity, so it is used to undo the aliasing without needing the setpoint
-# or any history: with POS active the current cannot be negative, so a
-# negative reading is a wrapped positive one (raw + 65.536), and vice versa
-# with NEG active. The 0.5A dead band keeps the noise around zero (a few
-# mA of either sign) from being wrapped; the price is that a real magnitude
-# within 0.5A of the 65.536A span is not recovered, so keep MAX_CURR below
-# it on these units. Sign-bit (H-bridge) units have no polarity contactors
-# to tell wrapped from real, so they are passed through unchanged.
+# $(P):CURRENT_RB_SIGN (register 40026) is therefore not a sign flag: it is
+# the high word, so it reads 0/1/-1/-2... depending on magnitude. Earlier
+# notes called it "unreliable (fixed 0xFFFF)": that was the high word of a
+# small negative current, misread as an "Illegal Value" flag.
 record(calc, "$(P):CURRENT_RB")
 {
-    field(DESC, "Current Readback (signed)")
-    field(INPA, "$(P):CURR_RB_RAW CP")
-    field(INPB, "$(P):STAT_POLARITY_POS CP")
-    field(INPC, "$(P):STAT_POLARITY_NEG CP")
-    field(INPD, "$(P):CFG_POLARITY_VIA_SIGN CP")
-    field(CALC, "D?A:(B&&A<-0.5?A+65.536:(C&&A>0.5?A-65.536:A))")
+    field(DESC, "Current Readback (signed, 32-bit)")
+    # The low word arrives signed (asyn sign-extends it): make it unsigned
+    # first, then add the signed high word.
+    field(INPA, "$(P):CURR_RB_RAW.RVAL CP")
+    field(INPB, "$(P):CURR_RB_HI_RAW CP")
+    field(CALC, "(B*65536+(A<0?A+65536:A))/1000")
     field(EGU,  "A")
     field(PREC, "3")
 }
