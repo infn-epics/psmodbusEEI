@@ -127,7 +127,7 @@ chmod +x st.cmd
 | `$(P):STAT_POLARITY_POS` | bi | Positive polarity active |
 | `$(P):STAT_POLARITY_NEG` | bi | Negative polarity active |
 | `$(P):STAT_CONTACTORS_OPEN` | bi | Contactors open |
-| `$(P):CURRENT_RB` | calc | Current readback (A), **signed** — matches `$(P):CURRENT_SP`'s convention. `CURR_RB_RAW` is already signed on both topologies (asyn sign-extends it) and is passed through directly; `CURRENT_RB_SIGN` is not reliably populated on either and isn't used (see below) |
+| `$(P):CURRENT_RB` | calc | Current readback (A), **signed** — matches `$(P):CURRENT_SP`'s convention. `CURR_RB_RAW` is already signed on both topologies (asyn sign-extends it); on contactor units the 16-bit aliasing above ±32.767 A is undone from the contactor polarity, sign-bit units are passed through; `CURRENT_RB_SIGN` is not reliably populated on either and isn't used (see below) |
 | `$(P):CURR_RB_RAW` | ai | Raw hardware magnitude register (unsigned) |
 | `$(P):CURRENT_RB_SIGN` | mbbi | Raw hardware sign register |
 | `$(P):VOLT_RB` | ai | Voltage readback (V) |
@@ -339,7 +339,18 @@ topology.
 The signed readback, `$(P):CURRENT_RB` (a `calc` record over `$(P):CURR_RB_RAW`, register 40025), is
 simpler than it first appeared: `CURR_RB_RAW` is **already genuinely signed on both topologies** — asyn
 sign-extends the 16-bit register correctly, and it directly reflects the real measured current's sign — so
-`CURRENT_RB` just passes it straight through, unconditionally.
+`CURRENT_RB` uses that sign as is.
+
+The register is a 16-bit value in mA, so it **aliases every 65.536 A**: on DHSTB203 a real +40 A reads
+−25.536 A and a real −40 A reads +25.536 A, while the supply really delivers the requested current (its
+output voltage keeps rising linearly). On contactor units (`POLARITY_VIA_SIGN=0`) `CURRENT_RB` undoes this
+from the contactor polarity, with no need for the setpoint or any history: with `STAT_POLARITY_POS` a
+reading below −0.5 A is a wrapped positive current (`raw + 65.536`), with `STAT_POLARITY_NEG` a reading
+above +0.5 A is a wrapped negative one (`raw − 65.536`). The 0.5 A dead band keeps the few-mA noise around
+zero from being wrapped, at the cost of not recovering a real magnitude within 0.5 A of 65.536 A — keep
+`MAX_CURR` below that on these units (the 16-bit setpoint register cannot go higher anyway: a larger value
+is truncated modulo 65.536 A on write). Sign-bit units (DHPTB102) have no contactors to tell wrapped from
+real, so `CURRENT_RB` is unchanged there and still aliases above 32.767 A.
 
 `$(P):CURRENT_RB_SIGN` (register 40026), despite the Modbus map suggesting it carries the sign for
 DP01/sign-bit units, is **not reliably populated on real hardware on either topology** — it consistently

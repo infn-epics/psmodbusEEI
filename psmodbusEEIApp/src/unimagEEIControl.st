@@ -62,8 +62,10 @@ option +r;  /* Make reentrant */
 
 /* Absolute difference, in Amps, between the readback and the requested
  * current. The readback register is a 16-bit value in mA, so it aliases
- * every 65.536A (e.g. a real +40A reads as -25.536A): compare modulo that
- * span, otherwise anything above 32.767A would look like a huge error. */
+ * every 65.536A (e.g. a real +40A reads as -25.536A). Contactor units get
+ * that undone in {P}:CURRENT_RB from the polarity, but sign-bit units
+ * cannot, so compare modulo that span: otherwise anything above 32.767A
+ * would look like a huge error there. */
 %% static double currentError(double rb, double sp)
 %% {
 %%     double d = fmod(rb - sp, 65.536);
@@ -89,7 +91,7 @@ assign current_sp to "{P}:CURRENT_SP";
 monitor current_sp;
 
 double current_rb;
-assign current_rb to "{P}:CURR_RB_RAW";
+assign current_rb to "{P}:CURRENT_RB";
 monitor current_rb;
 
 double curr_set;

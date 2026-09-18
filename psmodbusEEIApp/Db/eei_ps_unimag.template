@@ -75,7 +75,8 @@ record(bo, "$(P):CFG_POLARITY_VIA_SIGN")
 #
 # CURR_RB_RAW is already genuinely signed on BOTH topologies - asyn
 # sign-extends the 16-bit register correctly, and it directly reflects the
-# real measured current's sign - so it's passed straight through here.
+# real measured current's sign - so its sign is used as is (only the 16-bit
+# aliasing described below needs undoing).
 # $(P):CURRENT_RB_SIGN (register 40026) is NOT reliably populated on real
 # hardware on either topology: it reads a fixed raw 0xFFFF ("Illegal
 # Value") regardless of actual polarity. This was confirmed with repeated
@@ -84,11 +85,27 @@ record(bo, "$(P):CFG_POLARITY_VIA_SIGN")
 # in eei_ps.template) - before that fix, an earlier reading that looked
 # like a reliable CURRENT_RB_SIGN was actually an artifact of the firmware
 # being in a confused state from the malformed setpoint, not a real signal.
+#
+# Beyond +-32.767A the 16-bit mA register aliases (verified on DHSTB203: a
+# real +40A reads as -25.536A, a real -40A as +25.536A, and the supply
+# really delivers the requested current - its output voltage keeps rising
+# linearly). On contactor units the sign of the current is the contactor
+# polarity, so it is used to undo the aliasing without needing the setpoint
+# or any history: with POS active the current cannot be negative, so a
+# negative reading is a wrapped positive one (raw + 65.536), and vice versa
+# with NEG active. The 0.5A dead band keeps the noise around zero (a few
+# mA of either sign) from being wrapped; the price is that a real magnitude
+# within 0.5A of the 65.536A span is not recovered, so keep MAX_CURR below
+# it on these units. Sign-bit (H-bridge) units have no polarity contactors
+# to tell wrapped from real, so they are passed through unchanged.
 record(calc, "$(P):CURRENT_RB")
 {
     field(DESC, "Current Readback (signed)")
     field(INPA, "$(P):CURR_RB_RAW CP")
-    field(CALC, "A")
+    field(INPB, "$(P):STAT_POLARITY_POS CP")
+    field(INPC, "$(P):STAT_POLARITY_NEG CP")
+    field(INPD, "$(P):CFG_POLARITY_VIA_SIGN CP")
+    field(CALC, "D?A:(B&&A<-0.5?A+65.536:(C&&A>0.5?A-65.536:A))")
     field(EGU,  "A")
     field(PREC, "3")
 }
