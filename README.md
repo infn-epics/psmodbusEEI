@@ -132,9 +132,10 @@ chmod +x st.cmd
 | `$(P):CURRENT_RB_SIGN` | mbbi | Raw hardware sign register |
 | `$(P):VOLT_RB` | ai | Voltage readback (V) |
 | `$(P):RAMP_RATE_RB` | ai | Ramp rate readback (A/s) |
-| `$(P):STATE_RB` | mbbi | Decoded state (0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK, 5=CONN_FAULT, 6=SP_NOT_REACHED, 7=ST_NOT_REACHED); FAULT, EXT_INTLK, CONN_FAULT and ST_NOT_REACHED are MAJOR state alarms, SP_NOT_REACHED is MINOR |
-| `$(P):SP_NOT_REACHED` | bo | Set by the sequencer when the requested current was not reached within `SET_TOLERANCE` before `SET_TIMEOUT_S` (→ `STATE_RB`=6, MINOR) |
-| `$(P):ST_NOT_REACHED` | bo | Set by the sequencer when a step was not reached in time: zero current, standby, polarity switch or power-on (→ `STATE_RB`=7, MAJOR) |
+| `$(P):STATE_RB` | mbbi | Decoded state (0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK, 5=CONN_FAULT); FAULT, EXT_INTLK and CONN_FAULT are MAJOR state alarms |
+| `$(P):STATE_SM` | mbbi | UNIMAG state machine, from the sequencer step: 0=READY, 1=GOTOSET, 2=GOTOSTATE, 3=GOZERO, 4=GOPOS, 5=GONEG, 6=SPNOTSET (MINOR), 7=STATENOTSET (MAJOR) |
+| `$(P):SP_NOT_REACHED` | bo | Set by the sequencer when the requested current was not reached within `SET_TOLERANCE` before `SET_TIMEOUT_S` (→ `STATE_SM`=SPNOTSET, MINOR) |
+| `$(P):ST_NOT_REACHED` | bo | Set by the sequencer when a step was not reached in time: zero current, standby, polarity switch or power-on (→ `STATE_SM`=STATENOTSET, MAJOR) |
 
 ### Fault Monitoring PVs (Read)
 
@@ -256,15 +257,17 @@ On every new value of `$(P):CURRENT_SP` the state machine:
    - Powers back on (`$(P):CMD_POWER_ON`) and starts the ramp to the requested magnitude
      (`$(P):CMD_START_RAMP`).
 4. Each waiting step has a timeout (`$(P):SET_TIMEOUT_S`, default 30 s). On timeout the operation is
-   cancelled, the state machine returns to idle and `$(P):ST_NOT_REACHED` is raised (`STATE_RB` =
-   `ST_NOT_REACHED`, MAJOR). Asserting `$(P):CMD_RESET` at any point also cancels the in-progress
+   cancelled, the state machine returns to idle and `$(P):ST_NOT_REACHED` is raised (`STATE_SM` =
+   `STATENOTSET`, MAJOR). Asserting `$(P):CMD_RESET` at any point also cancels the in-progress
    operation. `CMD_RESET` is momentary (0.5 s) so that every reset is a new edge for the sequencer.
 5. Once the ramp has been started, the readback must get within `$(P):SET_TOLERANCE` (default 1 A, 0 =
    check disabled) of the request before `SET_TIMEOUT_S` expires, otherwise `$(P):SP_NOT_REACHED` is raised
-   (`STATE_RB` = `SP_NOT_REACHED`, MINOR). The comparison is a plain difference against the exact 32-bit
+   (`STATE_SM` = `SPNOTSET`, MINOR). The comparison is a plain difference against the exact 32-bit
    readback, so a unit that truncated the reference shows up as an error instead of being masked.
-6. Both failure flags are latched until the next setpoint or `CMD_RESET`, and are shown by `STATE_RB`
-   only when no more serious state (CONN_FAULT, EXT_INTLK, FAULT) is active.
+6. Both failure flags are latched until the next setpoint or `CMD_RESET`. They are software states:
+   `STATE_SM` shows them, `STATE_RB` keeps the state of the supply. While a sequence runs, `STATE_SM`
+   tells the step: `GOZERO` (ramp to zero), `GOTOSTATE` (standby / power on), `GOPOS` / `GONEG`
+   (polarity change), `GOTOSET` (ramp to the request).
 
 | PV | Default (db macro) | Meaning |
 |----|--------------------|---------|
