@@ -169,10 +169,9 @@ record(bo, "$(P):ST_NOT_REACHED")
 
 # Overall status readback - decode state from individual bits
 # PV format: $(P):STATE_RB
-# Values: 0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK,
-#         5=CONN_FAULT, 6=SP_NOT_REACHED, 7=ST_NOT_REACHED
-# Priority: CONN_FAULT > EXT_INTLK > FAULT > ST_NOT_REACHED >
-#           SP_NOT_REACHED > ON > STANDBY > OFF
+# Values: 0=OFF, 1=ON, 2=STANDBY, 3=FAULT, 4=EXT_INTLK, 5=CONN_FAULT
+# Priority: CONN_FAULT > EXT_INTLK > FAULT > ON > STANDBY > OFF
+# A setpoint or state not reached is reported in STATE_SM, not here.
 record(calcout, "$(P):STATE_DECODE")
 {
     field(DESC, "Decode Power Supply State")
@@ -187,11 +186,7 @@ record(calcout, "$(P):STATE_DECODE")
     field(INPD, "$(P):STAT_WORD1_RB.SEVR CP NMS")
     field(INPE, "$(P):FAULT_PLC_MAG_ILK1 CP NMS")
     field(INPF, "$(P):FAULT_PLC_MAG_ILK2 CP NMS")
-    # A failed sequencing step or an unreached setpoint (see the tolerance
-    # section above) only shows when nothing more serious is active.
-    field(INPG, "$(P):ST_NOT_REACHED CP NMS")
-    field(INPH, "$(P):SP_NOT_REACHED CP NMS")
-    field(CALC, "D?5:((E||F)?4:(C?3:(G?7:(H?6:(B?1:(A?2:0))))))")
+    field(CALC, "D?5:((E||F)?4:(C?3:(B?1:(A?2:0))))")
     field(OUT,  "$(P):STATE_RB PP")
 }
 
@@ -211,19 +206,59 @@ record(mbbi, "$(P):STATE_RB")
     field(THVL, "3")
     field(FRVL, "4")
     field(FVVL, "5")
-    field(SXST, "SP_NOT_REACHED")
-    field(SXVL, "6")
-    field(SVST, "ST_NOT_REACHED")
-    field(SVVL, "7")
     field(ZRSV, "NO_ALARM")
     field(ONSV, "NO_ALARM")
     field(TWSV, "NO_ALARM")
     field(THSV, "MAJOR")
     field(FRSV, "MAJOR")
     field(FVSV, "MAJOR")
+}
+
+# UNIMAG state machine: the sequencer (unimagEEIControl.st) publishes its step
+# and sets SP_NOT_REACHED / ST_NOT_REACHED, cleared by the next setpoint or RESET.
+#   0 READY | 1 GOTOSET | 2 GOTOSTATE | 3 GOZERO | 4 GOPOS | 5 GONEG
+#   6 SPNOTSET (MINOR) | 7 STATENOTSET (MAJOR)
+record(longout, "$(P):STATE_SM_STEP")
+{
+    field(DESC, "Sequencer step (0 = idle)")
+    field(VAL,  "0")
+    field(FLNK, "$(P):STATE_SM_CALC")
+}
+
+record(calcout, "$(P):STATE_SM_CALC")
+{
+    field(DESC, "Compute STATE_SM")
+    field(INPA, "$(P):STATE_SM_STEP NPP NMS")
+    field(INPB, "$(P):ST_NOT_REACHED CP NMS")
+    field(INPC, "$(P):SP_NOT_REACHED CP NMS")
+    field(CALC, "B?7:(C?6:A)")
+    field(OUT,  "$(P):STATE_SM PP")
+    field(OOPT, "Every Time")
+}
+
+record(mbbi, "$(P):STATE_SM") {
+    field(DESC, "UNIMAG state machine")
+    field(SCAN, "Passive")
+    field(ZRVL, "0")
+    field(ZRST, "READY")
+    field(ONVL, "1")
+    field(ONST, "GOTOSET")
+    field(TWVL, "2")
+    field(TWST, "GOTOSTATE")
+    field(THVL, "3")
+    field(THST, "GOZERO")
+    field(FRVL, "4")
+    field(FRST, "GOPOS")
+    field(FVVL, "5")
+    field(FVST, "GONEG")
+    field(SXVL, "6")
+    field(SXST, "SPNOTSET")
     field(SXSV, "MINOR")
+    field(SVVL, "7")
+    field(SVST, "STATENOTSET")
     field(SVSV, "MAJOR")
 }
+
 
 # State control setpoint
 # PV format: $(P):STATE_SP

@@ -195,8 +195,25 @@ int timeout_counter;
     pvPut(curr_set_raw32_lo); \
     pvPut(curr_set_raw32_hi)
 
+/* Sequence step published to STATE_SM */
+int sm_step;
+assign sm_step to "{P}:STATE_SM_STEP";
+
+/* STATE_SM values published in STATE_SM_STEP */
+#define SM_READY     0
+#define SM_GOTOSET   1
+#define SM_GOTOSTATE 2
+#define SM_GOZERO    3
+#define SM_GOPOS     4
+#define SM_GONEG     5
+
 ss unimag_control {
     state IDLE {
+        entry {
+            sm_step = SM_READY;
+            pvPut(sm_step);
+        }
+
         when (efTestAndClear(current_sp_ef)) {
             /* New current setpoint received - a new attempt clears the
              * previous failure. */
@@ -275,6 +292,8 @@ ss unimag_control {
     
     state RAMP_TO_ZERO {
         entry {
+            sm_step = SM_GOZERO;
+            pvPut(sm_step);
             /* Set current to zero and start ramp */
             WRITE_CURRENT_REF(0.0);
             cmd_start_ramp = 1;
@@ -307,6 +326,8 @@ ss unimag_control {
     
     state GO_STANDBY {
         entry {
+            sm_step = SM_GOTOSTATE;
+            pvPut(sm_step);
             cmd_standby = 1;
             pvPut(cmd_standby);
             timeout_counter = 0;
@@ -341,6 +362,8 @@ ss unimag_control {
     
     state CHANGE_POLARITY {
         entry {
+            sm_step = (requested_polarity == POL_POSITIVE) ? SM_GOPOS : SM_GONEG;
+            pvPut(sm_step);
             /* Contactor-based units only (bipolar/polarity_via_sign units
              * are dispatched straight to SET_SIGNED_CURRENT and never reach
              * this state) - open contactors first. */
@@ -413,6 +436,8 @@ ss unimag_control {
     
     state GO_POWERON {
         entry {
+            sm_step = SM_GOTOSTATE;
+            pvPut(sm_step);
             cmd_power_on = 1;
             pvPut(cmd_power_on);
             timeout_counter = 0;
@@ -445,6 +470,8 @@ ss unimag_control {
     
     state SET_CURRENT {
         entry {
+            sm_step = SM_GOTOSET;
+            pvPut(sm_step);
             /* Set the absolute current value */
             WRITE_CURRENT_REF(abs_current);
         }
@@ -465,6 +492,8 @@ ss unimag_control {
 
     state SET_CURRENT_DIRECT {
         entry {
+            sm_step = SM_GOTOSET;
+            pvPut(sm_step);
             /* No polarity change needed, check if we need to power on */
             pvGet(stat_power_on);
             timeout_counter = 0;
@@ -483,6 +512,11 @@ ss unimag_control {
     }
 
     state WAIT_POWERON_DIRECT {
+        entry {
+            sm_step = SM_GOTOSTATE;
+            pvPut(sm_step);
+        }
+
         when (stat_power_on) {
             WRITE_CURRENT_REF(abs_current);
         } state RAMP_DIRECT
@@ -505,6 +539,11 @@ ss unimag_control {
     }
     
     state RAMP_DIRECT {
+        entry {
+            sm_step = SM_GOTOSET;
+            pvPut(sm_step);
+        }
+
         when (delay(0.5)) {
             cmd_start_ramp = 1;
             pvPut(cmd_start_ramp);
@@ -518,6 +557,8 @@ ss unimag_control {
 
     state SET_SIGNED_CURRENT {
         entry {
+            sm_step = SM_GOTOSET;
+            pvPut(sm_step);
             /* Bipolar H-bridge unit: reverse current electronically via the
              * 32-bit two's-complement current reference - no contactors, no
              * standby, no ramp-to-zero. Write the complete signed reference
@@ -542,6 +583,11 @@ ss unimag_control {
     }
 
     state WAIT_POWERON_SIGNED {
+        entry {
+            sm_step = SM_GOTOSTATE;
+            pvPut(sm_step);
+        }
+
         when (stat_power_on) {
             /* Reference already written in SET_SIGNED_CURRENT's entry */
         } state RAMP_SIGNED
@@ -564,6 +610,11 @@ ss unimag_control {
     }
 
     state RAMP_SIGNED {
+        entry {
+            sm_step = SM_GOTOSET;
+            pvPut(sm_step);
+        }
+
         when (delay(0.5)) {
             cmd_start_ramp = 1;
             pvPut(cmd_start_ramp);
@@ -580,6 +631,8 @@ ss unimag_control {
      * reset abandons the wait (IDLE then consumes the pending event). */
     state VERIFY_SET {
         entry {
+            sm_step = SM_GOTOSET;
+            pvPut(sm_step);
             timeout_counter = 0;
         }
 
